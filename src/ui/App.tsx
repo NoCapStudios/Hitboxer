@@ -5,6 +5,7 @@ function App() {
   const [imgPath, setImgPath] = useState<string | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
   const [frames, setFrameCount] = useState<number | undefined>(1);
+  const [scale, setScaleSize] = useState<number | undefined>(3);
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
 
   async function handleOpen() {
@@ -51,23 +52,66 @@ function App() {
           </button>
 
           <button onClick={handleClose}>Remove Image</button>
-          <span>Frame Count: {frames}</span>
+
+          {frames === 1 ? (
+            <span className="span-style">
+              Frame Count: {frames}{" "}
+              <span className="tiptool-text">(Default)</span>
+            </span>
+          ) : (
+            <span className="span-style">Frame Count: {frames}</span>
+          )}
+
+          <p className="tiptool-text">
+            Frame(s) count cannot be less than one.
+          </p>
           <input
             type="number"
             name="Frame Count"
             id="frame-count"
             value={frames}
-            min={0}
+            min={1}
             onChange={(e) => {
               const value = Math.max(0, Number(e.target.value));
               setFrameCount(value);
             }}
           />
-          <span>
+
+          {scale === 3 ? (
+            <span>
+              Sprite-sheet Scale: {scale}{" "}
+              <span className="tiptool-text">(Default)</span>
+            </span>
+          ) : (
+            <span>Sprite-sheet Scale: {scale}</span>
+          )}
+
+          <p className="tiptool-text">
+            Sprite-sheet scaling cannot be less than one.
+          </p>
+          <input
+            type="number"
+            name="Image Scale"
+            id="sheet-scale"
+            value={scale}
+            min={1}
+            max={10}
+            onChange={(e) => {
+              const value = Math.max(0, Number(e.target.value));
+              setScaleSize(value);
+            }}
+          />
+          <span className="img-dim">
             Image Width: <b>{imgSize.width}</b> px
           </span>
-          <span>
+          <span className="img-dim">
             Image Height: <b>{imgSize.height}</b> px
+          </span>
+          <span className="img-dim">
+            Scaled Image Width: <b>{imgSize.width * scale}</b> px
+          </span>
+          <span className="img-dim">
+            Scaled Image Height: <b>{imgSize.height * scale}</b> px
           </span>
         </div>
 
@@ -76,6 +120,8 @@ function App() {
             <img
               src={imgPath}
               className="checkerboard-conic-background"
+              width={imgSize.width * scale}
+              height={imgSize.height * scale}
               onLoad={handleImageLoad}
               alt="loaded"
             />
