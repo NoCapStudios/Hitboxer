@@ -76,8 +76,7 @@ button:hover {
   background-color: #316f63;
 }
 
-#frame-count,
-#sheet-scale {
+.input-styles {
   width: 100%;
   padding: 10px;
   border: none;
@@ -129,6 +128,7 @@ button:hover {
       #ccc 0deg 90deg,
       #333 90deg 180deg);
   background-size: calc(var(--square-size) * 2) calc(var(--square-size) * 2);
+  transition: transform 0.3s ease;
 }
 
 .header-text {
@@ -146,13 +146,23 @@ button:hover {
 }
 
 .scale-max {
-  color: rgba(114, 70, 64, 1);
+  color: rgb(152, 91, 83);
 }
 
 .same-scales {
-  color: #aaa882ff;
+  color: rgb(216, 185, 138);
 }
 
 .base-color {
   color: #b1b1b1ff;
+}
+
+.flip-h {
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+
+.flip-v {
+  -webkit-transform: scaleY(-1);
+  transform: scaleY(-1);
 }
