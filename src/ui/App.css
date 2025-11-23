@@ -34,6 +34,7 @@ body {
   flex-direction: column;
   align-items: center;
   overflow: auto;
+  position: relative;
 }
 
 .tooltip-bar {
@@ -109,8 +110,6 @@ body {
   font-size: 15px;
 }
 
-.img-dim {}
-
 .image-viewer {
   position: relative;
   flex: none;
@@ -126,20 +125,33 @@ body {
 }
 
 .image-viewer img {
+  background-color: transparent;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   display: block;
 }
 
+.image-border {
+  --border-color: #dee20fa3;
+  border: 4px solid var(--border-color);
+}
+
+/* #box-container {
+  background-image: linear-gradient(#292a30 .1em, transparent .1em),
+    linear-gradient(90deg, #292a30 .1em, transparent .1em);
+} */
+
+#box {
+  background-color: #e41a1a68;
+  border-radius: 1px;
+  position: absolute;
+  cursor: pointer;
+}
+
 .checkerboard-conic-background {
-  --square-size: 64px;
-  /* max-width: 600px;
-  max-height: 600px; */
   background: repeating-conic-gradient(from 0deg,
-      #ccc 0deg 90deg,
-      #333 90deg 180deg);
-  background-size: calc(var(--square-size) * 2) calc(var(--square-size) * 2);
-  transition: transform 0.3s ease;
+      #e9e9e975 0deg 90deg,
+      #70707075 90deg 180deg);
 }
 
 .header-text {
@@ -212,4 +224,36 @@ body {
 
 .social-btn:active {
   transform: translateY(0px);
+}
+
+.grid-container {
+  --pixel-size: 40px;
+  background-image:
+    repeating-linear-gradient(to bottom, rgba(0, 255, 255, 0.5) 0, rgba(0, 255, 255, 0.5) 1px, transparent 1px, transparent 40px), repeating-linear-gradient(to right, rgba(255, 255, 0, 0.5) 0, rgba(255, 255, 0, 0.5) 1px, transparent 1px, transparent 40px);
+  background-image: ;
+  background-size: 100% 100%;
+}
+
+
+
+
+
+.hitbox-modal {
+  padding: 10px;
+  gap: 5px;
+  border-radius: 15px;
+  border: 4px solid #333;
+  display: flex;
+  flex-direction: column;
+  background-color: #304f5e;
+  position: absolute;
+  top: 50%;
+  right: 50%;
+  height: 30%;
+  width: 25%;
+  z-index: 20;
+}
+
+#X {
+  float: right;
 }

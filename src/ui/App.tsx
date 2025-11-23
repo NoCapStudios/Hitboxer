@@ -10,27 +10,67 @@ import {
   Github,
   Linkedin,
   RefreshCcw,
+  X,
 } from "lucide-react";
 import "./App.css";
 
+interface hitboxAttr {
+  id: number;
+  origin_x: number;
+  origin_y: number;
+  width: number;
+  height: number;
+}
 function App() {
-  const def = {
-    Frame: 1,
-    Scale: 10,
-    BgSize: 64,
+  const attr = {
+    Frame: { min: 1, max: 1000, def: 1, step: 1 },
+    Scale: { min: 1, max: 16, def: 10, step: 1 },
+    BgSize: { min: 8, max: 240, def: 80, step: 8 },
   };
+
+  const iconSize = 18;
 
   const [imgPath, setImgPath] = useState<string | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
   const [imgFlippedHorizontally, setHorizontal] = useState<boolean>(true);
   const [imgFlippedVertically, setVertical] = useState<boolean>(true);
 
-  const [frames, setFrameCount] = useState<number>(def.Frame);
-  const [scale, setScaleSize] = useState<number>(def.Scale);
-  const [bgsize, setBgSize] = useState<number>(def.BgSize);
+  const [frames, setFrameCount] = useState<number>(attr.Frame.def);
+  const [scale, setScaleSize] = useState<number>(attr.Scale.def);
+  const [bgsize, setBgSize] = useState<number>(attr.BgSize.def);
+
+  const [hitboxes, setHitboxes] = useState<hitboxAttr[]>([]);
+  const [hitboxId, setHitboxId] = useState(1);
+
+  const [isDragging, setToDragging] = useState(false);
+
+  const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
+    null
+  );
 
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
 
+  function removeOneHitbox(id: number) {
+    setHitboxes((prev) => prev.filter((w) => w.id !== id));
+  }
+
+  function addOneHitbox() {
+    setHitboxes((prev) => {
+      const newId = hitboxId;
+      setHitboxId(hitboxId + 1);
+
+      return [
+        ...prev,
+        {
+          id: newId,
+          origin_x: 0,
+          origin_y: 100,
+          width: 100,
+          height: 100,
+        },
+      ];
+    });
+  }
   async function handleOpen() {
     const newFilePath = await window.electronAPI.openImageDialog();
     if (!newFilePath) return;
@@ -56,7 +96,7 @@ function App() {
   }
 
   function handleColorCoding(scale: number) {
-    const atMax = scale === 16;
+    const atMax = scale === attr.Scale.max;
     const sameScales = imgSize.width === imgSize.width * scale;
 
     const className = atMax
@@ -88,12 +128,27 @@ function App() {
 
   useEffect(() => {
     if (imgFlippedHorizontally) {
-    } else {
     }
   }, [imgFlippedHorizontally]);
 
   return (
     <div className="container">
+      {currentHitboxModal && (
+        <div className="hitbox-modal">
+          <div>
+            <X
+              size={iconSize}
+              color="#333"
+              id="X"
+              onClick={() => setCurrentHitboxModal(null)}
+            />
+          </div>
+          <button onClick={() => removeOneHitbox(currentHitboxModal)}>
+            Delete
+          </button>
+        </div>
+      )}
+
       <div className="button-panel">
         <div className="social-buttons">
           <a
@@ -102,7 +157,7 @@ function App() {
             rel="noopener noreferrer"
             className="social-btn"
           >
-            <Github size={18} />
+            <Github size={iconSize} />
           </a>
 
           <a
@@ -111,7 +166,7 @@ function App() {
             rel="noopener noreferrer"
             className="social-btn"
           >
-            <Linkedin size={18} />
+            <Linkedin size={iconSize} />
           </a>
 
           <a
@@ -120,9 +175,10 @@ function App() {
             rel="noopener noreferrer"
             className="social-btn"
           >
-            <Youtube size={18} />
+            <Youtube size={iconSize} />
           </a>
         </div>
+
         <button onClick={handleOpen} className="file-buttons">
           {!imgPath ? (
             <>
@@ -161,22 +217,27 @@ function App() {
           </span>
         </button>
 
+        <button onClick={() => addOneHitbox()}>Hitbox</button>
+
+        <button onClick={() => setHitboxes([])}>Remove all</button>
         {/* Frame Count */}
         <span className="span-style">
           Frame Count: {frames}{" "}
-          {frames === 1 && <span className="tiptool-text">(Default)</span>}
-          {frames !== 1 && (
+          {frames === attr.Frame.min && (
+            <span className="tiptool-text">(Default)</span>
+          )}
+          {frames !== attr.Frame.min && (
             <span className="tiptool-text">
               {" "}
               <RefreshCcw
-                size={18}
+                size={iconSize}
                 style={{
                   cursor: "pointer",
                   verticalAlign: "middle",
                   display: "inline-flex",
                   alignItems: "center",
                 }}
-                onClick={() => setFrameCount(1)}
+                onClick={() => setFrameCount(attr.Frame.min)}
               />
             </span>
           )}
@@ -186,15 +247,19 @@ function App() {
           type="number"
           className="input-styles"
           value={frames}
-          min={1}
-          onChange={(e) => setFrameCount(Math.max(1, Number(e.target.value)))}
+          min={attr.Frame.min}
+          onChange={(e) =>
+            setFrameCount(Math.max(attr.Frame.min, Number(e.target.value)))
+          }
         />
 
         {/* Scale */}
         <span>
           Sprite-sheet Scale: {scale}{" "}
-          {scale === 10 && <span className="tiptool-text">(Default)</span>}
-          {scale !== 10 && (
+          {scale === attr.Scale.def && (
+            <span className="tiptool-text">(Default)</span>
+          )}
+          {scale !== attr.Scale.def && (
             <span
               className="tiptool-text"
               style={{
@@ -204,21 +269,24 @@ function App() {
                 alignItems: "center",
               }}
             >
-              <RefreshCcw size={18} onClick={() => setScaleSize(10)} />
+              <RefreshCcw
+                size={iconSize}
+                onClick={() => setScaleSize(attr.Scale.def)}
+              />
             </span>
           )}
         </span>
 
         <Slider
-          defaultValue={10}
+          defaultValue={attr.Scale.def}
           value={scale}
           valueLabelDisplay="off"
-          shiftStep={1}
-          step={1}
-          min={1}
-          max={16}
+          shiftStep={attr.Scale.step}
+          step={attr.Scale.step}
+          min={attr.Scale.min}
+          max={attr.Scale.max}
           className="input-styles"
-          onChange={(e, v) => setScaleSize(v as number)}
+          onChange={(e, v) => setScaleSize(v)}
           sx={{
             color: "#305e49",
             height: 6,
@@ -255,8 +323,10 @@ function App() {
         {/* BG Size */}
         <span>
           Background Grid Size: {bgsize}{" "}
-          {bgsize === 80 && <span className="tiptool-text">(Default)</span>}
-          {bgsize !== 80 && (
+          {bgsize === attr.BgSize.def && (
+            <span className="tiptool-text">(Default)</span>
+          )}
+          {bgsize !== attr.BgSize.def && (
             <span
               className="tiptool-text"
               style={{
@@ -266,21 +336,24 @@ function App() {
                 alignItems: "center",
               }}
             >
-              <RefreshCcw size={18} onClick={() => setBgSize(80)} />
+              <RefreshCcw
+                size={iconSize}
+                onClick={() => setBgSize(attr.BgSize.def)}
+              />
             </span>
           )}
         </span>
 
         <Slider
-          defaultValue={80}
+          defaultValue={attr.BgSize.def}
           value={bgsize}
           valueLabelDisplay="off"
-          shiftStep={16}
-          step={16}
+          shiftStep={attr.BgSize.step}
+          step={attr.BgSize.step}
           marks
-          min={16}
-          max={240}
-          onChange={(e, v) => setBgSize(v as number)}
+          min={attr.BgSize.min}
+          max={attr.BgSize.max}
+          onChange={(e, v) => setBgSize(v)}
           sx={{
             color: "#305e49",
             height: 6,
@@ -313,11 +386,12 @@ function App() {
             },
           }}
         />
+
         {handleColorCoding(scale!)}
-        <h1 style={{ color: "#ffffff09" }}>More Coming soon...</h1>
+        <div className=""></div>
       </div>
+
       <div className="editor">
-        {/* <canvas id="pixelGrid" width={width}></canvas> */}
         <div className="tooltip-bar">
           <p className="header-text">
             {filePath ? (
@@ -332,23 +406,41 @@ function App() {
 
         {imgPath && (
           <div
-            className="image-viewer"
-            style={{ ["--square-size" as any]: `${bgsize}px` }}
+            className="image-viewer checkerboard-conic-background "
+            style={{
+              backgroundSize: `${bgsize * 4}px ${bgsize * 4}px`,
+            }}
           >
             <img
               src={imgPath}
-              className={`checkerboard-conic-background ${
+              className={`image-border ${
                 imgFlippedHorizontally ? "" : "flip-h"
               } ${imgFlippedVertically ? "" : "flip-v"}`}
-              style={{ "--square-size": `${bgsize}px` } as React.CSSProperties}
               width={imgSize.width * scale}
               height={imgSize.height * scale}
               onLoad={handleImageLoad}
-              alt="loaded"
               draggable={false}
             />
           </div>
         )}
+
+        {hitboxes.map(({ id, origin_x, origin_y, width, height }) => (
+          <div
+            // onMouseDown={}
+            // onMouseUp={}
+            // onMouseMove={}
+            id="box"
+            style={{
+              left: origin_x,
+              top: origin_y,
+              width,
+              height,
+            }}
+            onClick={() => setCurrentHitboxModal(id)}
+          >
+            Hitbox: {id}
+          </div>
+        ))}
       </div>
     </div>
   );
