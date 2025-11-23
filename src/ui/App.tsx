@@ -14,13 +14,14 @@ import {
 } from "lucide-react";
 import "./App.css";
 
-interface hitboxAttr {
+interface hitboxProps {
   id: number;
   origin_x: number;
   origin_y: number;
   width: number;
   height: number;
 }
+
 function App() {
   const attr = {
     Frame: { min: 1, max: 1000, def: 1, step: 1 },
@@ -28,6 +29,13 @@ function App() {
     BgSize: { min: 8, max: 240, def: 80, step: 8 },
   };
 
+  const hitboxAttr = {
+    id: 1,
+    x: 200,
+    y: 200,
+    width: 150,
+    height: 150,
+  };
   const iconSize = 18;
 
   const [imgPath, setImgPath] = useState<string | null>(null);
@@ -39,10 +47,14 @@ function App() {
   const [scale, setScaleSize] = useState<number>(attr.Scale.def);
   const [bgsize, setBgSize] = useState<number>(attr.BgSize.def);
 
-  const [hitboxes, setHitboxes] = useState<hitboxAttr[]>([]);
-  const [hitboxId, setHitboxId] = useState(1);
+  const [hitboxes, setHitboxes] = useState<hitboxProps[]>([]);
+  const [hitboxId, setHitboxId] = useState<number>(hitboxAttr.id);
+  const [hitboxX, setHitboxX] = useState<number>(hitboxAttr.x);
+  const [hitboxY, setHitboxY] = useState<number>(hitboxAttr.y);
+  const [hitboxWidth, setHitboxWidth] = useState<number>(hitboxAttr.width);
+  const [hitboxHeight, setHitboxHeight] = useState<number>(hitboxAttr.height);
 
-  const [isDragging, setToDragging] = useState(false);
+  // const [isDragging, setToDragging] = useState(false);
 
   const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
     null
@@ -52,25 +64,56 @@ function App() {
 
   function removeOneHitbox(id: number) {
     setHitboxes((prev) => prev.filter((w) => w.id !== id));
+    setCurrentHitboxModal(null);
   }
+
+  function resetAttributes() {
+    setHitboxId(hitboxAttr.id);
+    setHitboxX(hitboxAttr.x);
+    setHitboxY(hitboxAttr.y);
+    setHitboxWidth(hitboxAttr.width);
+    setHitboxHeight(hitboxAttr.height);
+  }
+
+  function removeAllHitboxes() {
+    setHitboxes([]);
+    resetAttributes();
+  }
+
+  // useEffect(() => {
+  //   setHitboxes((prev) => prev.filter((w) => w.id === id));
+  // }, []);
 
   function addOneHitbox() {
     setHitboxes((prev) => {
-      const newId = hitboxId;
-      setHitboxId(hitboxId + 1);
+      const usedIds = prev.map((h) => h.id).sort((a, b) => a - b);
+
+      let newId = 1;
+      for (let i = 0; i < usedIds.length; i++) {
+        if (usedIds[i] !== i + 1) {
+          newId = i + 1;
+          break;
+        }
+        newId = usedIds.length + 1;
+      }
+      // const newId = hitboxId;
+      // setHitboxId(hitboxId + 1);
 
       return [
         ...prev,
         {
           id: newId,
-          origin_x: 0,
-          origin_y: 100,
-          width: 100,
-          height: 100,
+          origin_x: hitboxX,
+          origin_y: hitboxY,
+          width: hitboxWidth,
+          height: hitboxHeight,
         },
       ];
     });
+    setHitboxX(hitboxX + 90);
+    setHitboxY(hitboxY + 90);
   }
+
   async function handleOpen() {
     const newFilePath = await window.electronAPI.openImageDialog();
     if (!newFilePath) return;
@@ -131,21 +174,45 @@ function App() {
     }
   }, [imgFlippedHorizontally]);
 
+  useEffect(() => {
+    if (hitboxes.length < 0) {
+      removeAllHitboxes();
+    }
+  });
   return (
     <div className="container">
       {currentHitboxModal && (
         <div className="hitbox-modal">
-          <div>
-            <X
-              size={iconSize}
-              color="#333"
-              id="X"
-              onClick={() => setCurrentHitboxModal(null)}
-            />
+          <div className="hitbox-editor">
+            <h2 id="hitbox-editor-header">Hitbox Editor Panel</h2>
+            <div>
+              <X
+                size={28}
+                color="#333"
+                id="X"
+                onClick={() => setCurrentHitboxModal(null)}
+              />
+            </div>
           </div>
+
           <button onClick={() => removeOneHitbox(currentHitboxModal)}>
-            Delete
+            Delete Current Hitbox: {currentHitboxModal}
           </button>
+
+          <button onClick={() => removeAllHitboxes()}>
+            Delete All Hitboxes
+          </button>
+
+          <button onClick={() => resetAttributes()}>
+            Reset Hitbox Attributes
+          </button>
+          <input
+            type="number"
+            className="input-styles"
+            // value={}
+            // min={}
+            onChange={(e) => setFrameCount(Math.max(0, Number(e.target.value)))}
+          />
         </div>
       )}
 
@@ -217,9 +284,11 @@ function App() {
           </span>
         </button>
 
-        <button onClick={() => addOneHitbox()}>Hitbox</button>
+        <button onClick={() => addOneHitbox()} className="file-buttons">
+          Create Hitbox
+        </button>
 
-        <button onClick={() => setHitboxes([])}>Remove all</button>
+        {/* <input type="number" value={}/> */}
         {/* Frame Count */}
         <span className="span-style">
           Frame Count: {frames}{" "}

@@ -254,6 +254,21 @@ body {
   z-index: 20;
 }
 
+.hitbox-editor {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+#hitbox-editor-header {
+  padding: 0;
+  margin: 0;
+}
+
 #X {
   float: right;
+  cursor: pointer;
 }
