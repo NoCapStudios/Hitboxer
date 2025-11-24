@@ -36,6 +36,7 @@ function App() {
     width: 150,
     height: 150,
   };
+
   const iconSize = 18;
 
   const [imgPath, setImgPath] = useState<string | null>(null);
@@ -194,83 +195,98 @@ function App() {
           <button onClick={() => resetAttributes()}>
             Reset Hitbox Attributes
           </button>
+          <div className="input-col">
+            <div className="input-row">
+              <label>X:</label>
+              <input
+                type="number"
+                className="input-styles-modal"
+                value={
+                  hitboxes.find((h) => h.id === currentHitboxModal)?.origin_x ??
+                  hitboxX
+                }
+                step={10}
+                min={10}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setHitboxes((prev) =>
+                    prev.map((h) =>
+                      h.id === currentHitboxModal ? { ...h, origin_x: v } : h
+                    )
+                  );
+                }}
+              />
+              {/*Add reset button for each inputs */}
+            </div>
 
-          <input
-            type="number"
-            className="input-styles-modal"
-            value={
-              hitboxes.find((h) => h.id === currentHitboxModal)?.origin_x ??
-              hitboxX
-            }
-            min={10}
-            max={1000}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setHitboxes((prev) =>
-                prev.map((h) =>
-                  h.id === currentHitboxModal ? { ...h, origin_x: v } : h
-                )
-              );
-            }}
-          />
+            <div className="input-row">
+              <label>Y:</label>
+              <input
+                type="number"
+                className="input-styles-modal"
+                value={
+                  hitboxes.find((h) => h.id === currentHitboxModal)?.origin_y ??
+                  hitboxY
+                }
+                step={10}
+                min={10}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setHitboxes((prev) =>
+                    prev.map((h) =>
+                      h.id === currentHitboxModal ? { ...h, origin_y: v } : h
+                    )
+                  );
+                }}
+              />
+            </div>
+          </div>
 
-          <input
-            type="number"
-            className="input-styles-modal"
-            value={
-              hitboxes.find((h) => h.id === currentHitboxModal)?.origin_y ??
-              hitboxY
-            }
-            step={10}
-            min={10}
-            max={1000}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setHitboxes((prev) =>
-                prev.map((h) =>
-                  h.id === currentHitboxModal ? { ...h, origin_y: v } : h
-                )
-              );
-            }}
-          />
+          <div className="input-row">
+            <div className="input-row">
+              <label>Width:</label>
+              <input
+                type="number"
+                className="input-styles-modal"
+                value={
+                  hitboxes.find((h) => h.id === currentHitboxModal)?.width ??
+                  hitboxWidth
+                }
+                step={10}
+                min={10}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setHitboxes((prev) =>
+                    prev.map((h) =>
+                      h.id === currentHitboxModal ? { ...h, width: v } : h
+                    )
+                  );
+                }}
+              />
+            </div>
 
-          <input
-            type="number"
-            className="input-styles-modal"
-            value={
-              hitboxes.find((h) => h.id === currentHitboxModal)?.width ??
-              hitboxWidth
-            }
-            min={10}
-            max={1000}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setHitboxes((prev) =>
-                prev.map((h) =>
-                  h.id === currentHitboxModal ? { ...h, width: v } : h
-                )
-              );
-            }}
-          />
-
-          <input
-            type="number"
-            className="input-styles-modal"
-            value={
-              hitboxes.find((h) => h.id === currentHitboxModal)?.height ??
-              hitboxHeight
-            }
-            min={10}
-            max={1000}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setHitboxes((prev) =>
-                prev.map((h) =>
-                  h.id === currentHitboxModal ? { ...h, height: v } : h
-                )
-              );
-            }}
-          />
+            <div className="input-row">
+              <label>Height:</label>
+              <input
+                type="number"
+                className="input-styles-modal"
+                value={
+                  hitboxes.find((h) => h.id === currentHitboxModal)?.height ??
+                  hitboxHeight
+                }
+                step={10}
+                min={10}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setHitboxes((prev) =>
+                    prev.map((h) =>
+                      h.id === currentHitboxModal ? { ...h, height: v } : h
+                    )
+                  );
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
 

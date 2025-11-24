@@ -103,6 +103,7 @@ body {
   border-radius: 8px;
   font-size: 1rem;
   background-color: #111;
+  text-align: center;
 }
 
 .span-style {
@@ -261,9 +262,10 @@ body {
   position: absolute;
   top: 30%;
   right: 50%;
-  height: 36%;
+  height: 40%;
   width: 20%;
   z-index: 20;
+  overflow: auto;
 }
 
 .hitbox-editor {
@@ -283,4 +285,26 @@ body {
 #X {
   float: right;
   cursor: pointer;
+}
+
+.input-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.input-row label {
+  font-size: 14px;
+  width: 60px;
 }
