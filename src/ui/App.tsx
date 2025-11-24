@@ -48,7 +48,6 @@ function App() {
   const [bgsize, setBgSize] = useState<number>(attr.BgSize.def);
 
   const [hitboxes, setHitboxes] = useState<hitboxProps[]>([]);
-  const [hitboxId, setHitboxId] = useState<number>(hitboxAttr.id);
   const [hitboxX, setHitboxX] = useState<number>(hitboxAttr.x);
   const [hitboxY, setHitboxY] = useState<number>(hitboxAttr.y);
   const [hitboxWidth, setHitboxWidth] = useState<number>(hitboxAttr.width);
@@ -64,11 +63,9 @@ function App() {
 
   function removeOneHitbox(id: number) {
     setHitboxes((prev) => prev.filter((w) => w.id !== id));
-    setCurrentHitboxModal(null);
   }
 
   function resetAttributes() {
-    setHitboxId(hitboxAttr.id);
     setHitboxX(hitboxAttr.x);
     setHitboxY(hitboxAttr.y);
     setHitboxWidth(hitboxAttr.width);
@@ -79,10 +76,6 @@ function App() {
     setHitboxes([]);
     resetAttributes();
   }
-
-  // useEffect(() => {
-  //   setHitboxes((prev) => prev.filter((w) => w.id === id));
-  // }, []);
 
   function addOneHitbox() {
     setHitboxes((prev) => {
@@ -174,11 +167,6 @@ function App() {
     }
   }, [imgFlippedHorizontally]);
 
-  useEffect(() => {
-    if (hitboxes.length < 0) {
-      removeAllHitboxes();
-    }
-  });
   return (
     <div className="container">
       {currentHitboxModal && (
@@ -206,12 +194,82 @@ function App() {
           <button onClick={() => resetAttributes()}>
             Reset Hitbox Attributes
           </button>
+
           <input
             type="number"
-            className="input-styles"
-            // value={}
-            // min={}
-            onChange={(e) => setFrameCount(Math.max(0, Number(e.target.value)))}
+            className="input-styles-modal"
+            value={
+              hitboxes.find((h) => h.id === currentHitboxModal)?.origin_x ??
+              hitboxX
+            }
+            min={10}
+            max={1000}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setHitboxes((prev) =>
+                prev.map((h) =>
+                  h.id === currentHitboxModal ? { ...h, origin_x: v } : h
+                )
+              );
+            }}
+          />
+
+          <input
+            type="number"
+            className="input-styles-modal"
+            value={
+              hitboxes.find((h) => h.id === currentHitboxModal)?.origin_y ??
+              hitboxY
+            }
+            step={10}
+            min={10}
+            max={1000}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setHitboxes((prev) =>
+                prev.map((h) =>
+                  h.id === currentHitboxModal ? { ...h, origin_y: v } : h
+                )
+              );
+            }}
+          />
+
+          <input
+            type="number"
+            className="input-styles-modal"
+            value={
+              hitboxes.find((h) => h.id === currentHitboxModal)?.width ??
+              hitboxWidth
+            }
+            min={10}
+            max={1000}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setHitboxes((prev) =>
+                prev.map((h) =>
+                  h.id === currentHitboxModal ? { ...h, width: v } : h
+                )
+              );
+            }}
+          />
+
+          <input
+            type="number"
+            className="input-styles-modal"
+            value={
+              hitboxes.find((h) => h.id === currentHitboxModal)?.height ??
+              hitboxHeight
+            }
+            min={10}
+            max={1000}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setHitboxes((prev) =>
+                prev.map((h) =>
+                  h.id === currentHitboxModal ? { ...h, height: v } : h
+                )
+              );
+            }}
           />
         </div>
       )}
@@ -498,7 +556,9 @@ function App() {
             // onMouseDown={}
             // onMouseUp={}
             // onMouseMove={}
-            id="box"
+            className={`${
+              currentHitboxModal === id ? "highlighted-box" : "box"
+            }`}
             style={{
               left: origin_x,
               top: origin_y,
