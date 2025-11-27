@@ -9,6 +9,4 @@ contextBridge.exposeInMainWorld("electronAPI", {
     const blob = new Blob([data], { type: "image/*" });
     return URL.createObjectURL(blob);
   },
-
-  getScreenSize: () => ipcRenderer.invoke("get-screen-size"),
 });

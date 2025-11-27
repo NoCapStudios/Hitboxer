@@ -65,10 +65,9 @@ function App() {
 
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
 
-  // const currentHitbox = hitboxes.find((h) => h.id === currentHitboxModal);
-
-  const startDrag = (e) => {
+  const startDrag = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragging(true);
     setOffset({
       x: e.clientX - position.x,
@@ -78,13 +77,18 @@ function App() {
 
   const stopDrag = () => setDragging(false);
 
-  const onDrag = (e) => {
+  const onDrag = (e: MouseEvent) => {
     if (!isDragging) return;
-    setPosition({
-      x: e.clientX - offset.x,
-      y: e.clientY - offset.y,
+
+    // Use requestAnimationFrame for smoother updates
+    requestAnimationFrame(() => {
+      setPosition({
+        x: e.clientX - offset.x,
+        y: e.clientY - offset.y,
+      });
     });
   };
+
   function removeOneHitbox(id: number) {
     setHitboxes((prev) => prev.filter((w) => w.id !== id));
   }
@@ -113,8 +117,6 @@ function App() {
         }
         newId = usedIds.length + 1;
       }
-      // const newId = hitboxId;
-      // setHitboxId(hitboxId + 1);
 
       return [
         ...prev,
@@ -192,17 +194,20 @@ function App() {
   }, [imgFlippedHorizontally]);
 
   useEffect(() => {
-    const move = (e) => onDrag(e);
+    if (!isDragging) return;
+
+    const move = (e: MouseEvent) => onDrag(e);
     const up = () => stopDrag();
 
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
+    // Use capture phase for better performance
+    document.addEventListener("mousemove", move, { capture: true });
+    document.addEventListener("mouseup", up, { capture: true });
 
     return () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
+      document.removeEventListener("mousemove", move, { capture: true });
+      document.removeEventListener("mouseup", up, { capture: true });
     };
-  }, [isDragging, offset, position]);
+  }, [isDragging, offset]);
 
   return (
     <div className="container">
@@ -214,8 +219,7 @@ function App() {
           <div
             className="hitbox-editor"
             onMouseDown={startDrag}
-            onMouseUp={stopDrag}
-            style={{ cursor: "grab" }}
+            style={{ cursor: isDragging ? "grabbing" : "grab" }}
           >
             <h2 className="hitbox-editor-header">Hitbox Editor Panel</h2>
             <div>
@@ -465,7 +469,6 @@ function App() {
           Create Hitbox
         </button>
 
-        {/* <input type="number" value={}/> */}
         {/* Frame Count */}
         <span className="span-style">
           Frame Count: {frames}{" "}
@@ -532,7 +535,7 @@ function App() {
           min={attr.Scale.min}
           max={attr.Scale.max}
           className="input-styles"
-          onChange={(e, v) => setScaleSize(v)}
+          onChange={(_e, v) => setScaleSize(v)}
           sx={{
             color: "#305e49",
             height: 6,
@@ -599,7 +602,7 @@ function App() {
           marks
           min={attr.BgSize.min}
           max={attr.BgSize.max}
-          onChange={(e, v) => setBgSize(v)}
+          onChange={(_e, v) => setBgSize(v)}
           sx={{
             color: "#305e49",
             height: 6,
@@ -672,9 +675,7 @@ function App() {
 
         {hitboxes.map(({ id, origin_x, origin_y, width, height }) => (
           <div
-            // onMouseDown={}
-            // onMouseUp={}
-            // onMouseMove={}
+            key={id}
             className={`${
               currentHitboxModal === id ? "highlighted-box" : "box"
             }`}

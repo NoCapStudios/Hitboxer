@@ -11,6 +11,10 @@
     width: 20%;
     z-index: 20;
     overflow: auto;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
 }
 
 .hitbox-editor {
@@ -20,6 +24,25 @@
     justify-content: space-between;
     padding-bottom: 0;
     padding-top: 0;
+    user-select: none;
+    contain: layout style paint;
+}
+
+.box,
+.highlighted-box {
+    will-change: transform;
+    contain: layout style paint;
+    border-radius: 1px;
+    position: absolute;
+    cursor: pointer;
+}
+
+.box {
+    background-color: #d91a1a68;
+}
+
+.highlighted-box {
+    background-color: #ff1b1b8d;
 }
 
 .hitbox-editor-header {
@@ -42,6 +65,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    gap: 8px;
 }
 
 .input-row label {

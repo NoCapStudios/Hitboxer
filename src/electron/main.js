@@ -5,20 +5,31 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.whenReady().then(() => {
+function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 700,
+    width: 1000,
+    height: 800,
     webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: true,
+      hardwareAcceleration: true,
       preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true, 
-      nodeIntegration: true
     }
   });
-
-// mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
   mainWindow.loadURL("http://localhost:5173");
-});
+}
+
+app.whenReady().then(() => {
+  createWindow();
+
+  app.on("activate", function () {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  })
+})
+
+app.on("window-all-closed", function () {
+  if (process.platform !== 'darwin') app.quit();
+})
 
 ipcMain.handle("open-image-dialog", async () => {
   const result = await dialog.showOpenDialog({
@@ -31,13 +42,3 @@ ipcMain.handle("open-image-dialog", async () => {
   if (result.canceled) return null;
   return result.filePaths[0];
 });
-
-ipcMain.handle("get-screen-size", () => {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  return { width, height };
-});
-
-function getScreenSize() {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  return { width, height };
-}
