@@ -55,7 +55,9 @@ function App() {
   const [hitboxWidth, setHitboxWidth] = useState<number>(hitboxAttr.width);
   const [hitboxHeight, setHitboxHeight] = useState<number>(hitboxAttr.height);
 
-  // const [isDragging, setToDragging] = useState(false);
+  const [isDragging, setDragging] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 720, y: 360 });
 
   const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
     null
@@ -63,8 +65,26 @@ function App() {
 
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
 
-  const currentHitbox = hitboxes.find((h) => h.id === currentHitboxModal);
+  // const currentHitbox = hitboxes.find((h) => h.id === currentHitboxModal);
 
+  const startDrag = (e) => {
+    e.preventDefault();
+    setDragging(true);
+    setOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+  };
+
+  const stopDrag = () => setDragging(false);
+
+  const onDrag = (e) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - offset.x,
+      y: e.clientY - offset.y,
+    });
+  };
   function removeOneHitbox(id: number) {
     setHitboxes((prev) => prev.filter((w) => w.id !== id));
   }
@@ -171,11 +191,32 @@ function App() {
     }
   }, [imgFlippedHorizontally]);
 
+  useEffect(() => {
+    const move = (e) => onDrag(e);
+    const up = () => stopDrag();
+
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [isDragging, offset, position]);
+
   return (
     <div className="container">
       {currentHitboxModal && (
-        <div className="hitbox-modal">
-          <div className="hitbox-editor">
+        <div
+          className="hitbox-modal"
+          style={{ top: position.y, left: position.x, position: "absolute" }}
+        >
+          <div
+            className="hitbox-editor"
+            onMouseDown={startDrag}
+            onMouseUp={stopDrag}
+            style={{ cursor: "grab" }}
+          >
             <h2 className="hitbox-editor-header">Hitbox Editor Panel</h2>
             <div>
               <X

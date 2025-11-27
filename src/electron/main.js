@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, screen } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -31,3 +31,13 @@ ipcMain.handle("open-image-dialog", async () => {
   if (result.canceled) return null;
   return result.filePaths[0];
 });
+
+ipcMain.handle("get-screen-size", () => {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  return { width, height };
+});
+
+function getScreenSize() {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  return { width, height };
+}
