@@ -57,7 +57,7 @@ function App() {
 
   const [isDragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [position, setPosition] = useState({ x: 720, y: 360 });
+  const [position, setPosition] = useState({ x: 70, y: 30 });
 
   const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
     null
@@ -80,13 +80,12 @@ function App() {
   const onDrag = (e: MouseEvent) => {
     if (!isDragging) return;
 
-    // Use requestAnimationFrame for smoother updates
-    requestAnimationFrame(() => {
-      setPosition({
-        x: e.clientX - offset.x,
-        y: e.clientY - offset.y,
-      });
-    });
+    const modal = document.querySelector(".hitbox-modal") as HTMLElement;
+    if (modal) {
+      modal.style.transform = `translate(${e.clientX - offset.x}px, ${
+        e.clientY - offset.y
+      }px)`;
+    }
   };
 
   function removeOneHitbox(id: number) {
@@ -199,7 +198,6 @@ function App() {
     const move = (e: MouseEvent) => onDrag(e);
     const up = () => stopDrag();
 
-    // Use capture phase for better performance
     document.addEventListener("mousemove", move, { capture: true });
     document.addEventListener("mouseup", up, { capture: true });
 
