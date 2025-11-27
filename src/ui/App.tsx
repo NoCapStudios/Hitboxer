@@ -38,7 +38,8 @@ function App() {
     height: 150,
   };
 
-  const iconSize = 18;
+  const ICON_SIZE = 18;
+  const ANIMATION_DURATION = 300;
 
   const [imgPath, setImgPath] = useState<string | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
@@ -54,6 +55,8 @@ function App() {
   const [hitboxY, setHitboxY] = useState<number>(hitboxAttr.y);
   const [hitboxWidth, setHitboxWidth] = useState<number>(hitboxAttr.width);
   const [hitboxHeight, setHitboxHeight] = useState<number>(hitboxAttr.height);
+  const [exitingHitboxIds, setExitingHitboxIds] = useState<number[]>([]);
+  const [enteringHitboxIds, setEnteringHitboxIds] = useState<number[]>([]);
 
   const [isDragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -95,7 +98,14 @@ function App() {
   };
 
   function removeOneHitbox(id: number) {
-    setHitboxes((prev) => prev.filter((w) => w.id !== id));
+    setExitingHitboxIds((prev) => [...prev, id]);
+
+    setTimeout(() => {
+      setHitboxes((prev) => prev.filter((w) => w.id !== id));
+      setExitingHitboxIds((prev) =>
+        prev.filter((exitingId) => exitingId !== id)
+      );
+    }, ANIMATION_DURATION);
   }
 
   function resetAttributes() {
@@ -110,32 +120,39 @@ function App() {
     resetAttributes();
   }
 
-  function addOneHitbox() {
-    setHitboxes((prev) => {
-      const usedIds = prev.map((h) => h.id).sort((a, b) => a - b);
+  function addOneHitbox(id: number) {
+    setEnteringHitboxIds((prev) => [...prev, id]);
 
-      let newId = 1;
-      for (let i = 0; i < usedIds.length; i++) {
-        if (usedIds[i] !== i + 1) {
-          newId = i + 1;
-          break;
+    setTimeout(() => {
+      setHitboxes((prev) => {
+        const usedIds = prev.map((h) => h.id).sort((a, b) => a - b);
+
+        let newId = 1;
+        for (let i = 0; i < usedIds.length; i++) {
+          if (usedIds[i] !== i + 1) {
+            newId = i + 1;
+            break;
+          }
+          newId = usedIds.length + 1;
         }
-        newId = usedIds.length + 1;
-      }
 
-      return [
-        ...prev,
-        {
-          id: newId,
-          origin_x: hitboxX,
-          origin_y: hitboxY,
-          width: hitboxWidth,
-          height: hitboxHeight,
-        },
-      ];
-    });
-    setHitboxX(hitboxX + 90);
-    setHitboxY(hitboxY + 90);
+        return [
+          ...prev,
+          {
+            id: newId,
+            origin_x: hitboxX,
+            origin_y: hitboxY,
+            width: hitboxWidth,
+            height: hitboxHeight,
+          },
+        ];
+      });
+      setHitboxX(hitboxX + 90);
+      setHitboxY(hitboxY + 90);
+      setEnteringHitboxIds((prev) =>
+        prev.filter((enteringId) => enteringId !== id)
+      );
+    }, ANIMATION_DURATION);
   }
 
   async function handleOpen() {
@@ -409,7 +426,7 @@ function App() {
             rel="noopener noreferrer"
             className="social-btn"
           >
-            <Github size={iconSize} />
+            <Github size={ICON_SIZE} />
           </a>
 
           <a
@@ -418,7 +435,7 @@ function App() {
             rel="noopener noreferrer"
             className="social-btn"
           >
-            <Linkedin size={iconSize} />
+            <Linkedin size={ICON_SIZE} />
           </a>
 
           <a
@@ -427,7 +444,7 @@ function App() {
             rel="noopener noreferrer"
             className="social-btn"
           >
-            <Youtube size={iconSize} />
+            <Youtube size={ICON_SIZE} />
           </a>
         </div>
 
@@ -469,7 +486,10 @@ function App() {
           </span>
         </button>
 
-        <button onClick={() => addOneHitbox()} className="file-buttons">
+        <button
+          onClick={() => addOneHitbox(currentHitboxModal)}
+          className="file-buttons"
+        >
           Create Hitbox
         </button>
 
@@ -483,7 +503,7 @@ function App() {
             <span className="tiptool-text">
               {" "}
               <RefreshCcw
-                size={iconSize}
+                size={ICON_SIZE}
                 style={{
                   cursor: "pointer",
                   verticalAlign: "middle",
@@ -523,7 +543,7 @@ function App() {
               }}
             >
               <RefreshCcw
-                size={iconSize}
+                size={ICON_SIZE}
                 onClick={() => setScaleSize(attr.Scale.def)}
               />
             </span>
@@ -590,7 +610,7 @@ function App() {
               }}
             >
               <RefreshCcw
-                size={iconSize}
+                size={ICON_SIZE}
                 onClick={() => setBgSize(attr.BgSize.def)}
               />
             </span>
@@ -682,6 +702,8 @@ function App() {
             key={id}
             className={`${
               currentHitboxModal === id ? "highlighted-box" : "box"
+            } ${exitingHitboxIds.includes(id) ? "exiting" : ""} ${
+              enteringHitboxIds.includes(id) ? "entering" : ""
             }`}
             style={{
               left: origin_x,
