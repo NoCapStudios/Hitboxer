@@ -12,7 +12,8 @@ import {
   RefreshCcw,
   X,
 } from "lucide-react";
-import "./App.css";
+import "./css/App.css";
+import "./css/HitboxEditor.css";
 
 interface hitboxProps {
   id: number;
@@ -61,6 +62,8 @@ function App() {
   );
 
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
+
+  const currentHitbox = hitboxes.find((h) => h.id === currentHitboxModal);
 
   function removeOneHitbox(id: number) {
     setHitboxes((prev) => prev.filter((w) => w.id !== id));
@@ -173,7 +176,7 @@ function App() {
       {currentHitboxModal && (
         <div className="hitbox-modal">
           <div className="hitbox-editor">
-            <h2 id="hitbox-editor-header">Hitbox Editor Panel</h2>
+            <h2 className="hitbox-editor-header">Hitbox Editor Panel</h2>
             <div>
               <X
                 size={28}
@@ -216,7 +219,21 @@ function App() {
                   );
                 }}
               />
-              {/*Add reset button for each inputs */}
+
+              <RefreshCcw
+                size={24}
+                color="#fff"
+                className="refresh"
+                onClick={() =>
+                  setHitboxes((prev) =>
+                    prev.map((h) =>
+                      h.id === currentHitboxModal
+                        ? { ...h, origin_x: hitboxAttr.x }
+                        : h
+                    )
+                  )
+                }
+              />
             </div>
 
             <div className="input-row">
@@ -239,10 +256,25 @@ function App() {
                   );
                 }}
               />
+
+              <RefreshCcw
+                size={24}
+                color="#fff"
+                className="refresh"
+                onClick={() =>
+                  setHitboxes((prev) =>
+                    prev.map((h) =>
+                      h.id === currentHitboxModal
+                        ? { ...h, origin_y: hitboxAttr.y }
+                        : h
+                    )
+                  )
+                }
+              />
             </div>
           </div>
 
-          <div className="input-row">
+          <div className="input-col">
             <div className="input-row">
               <label>Width:</label>
               <input
@@ -262,6 +294,21 @@ function App() {
                     )
                   );
                 }}
+              />
+
+              <RefreshCcw
+                size={24}
+                color="#fff"
+                className="refresh"
+                onClick={() =>
+                  setHitboxes((prev) =>
+                    prev.map((h) =>
+                      h.id === currentHitboxModal
+                        ? { ...h, width: hitboxAttr.width }
+                        : h
+                    )
+                  )
+                }
               />
             </div>
 
@@ -284,6 +331,21 @@ function App() {
                     )
                   );
                 }}
+              />
+
+              <RefreshCcw
+                size={24}
+                color="#fff"
+                className="refresh"
+                onClick={() =>
+                  setHitboxes((prev) =>
+                    prev.map((h) =>
+                      h.id === currentHitboxModal
+                        ? { ...h, height: hitboxAttr.height }
+                        : h
+                    )
+                  )
+                }
               />
             </div>
           </div>
