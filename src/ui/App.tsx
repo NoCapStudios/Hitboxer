@@ -57,7 +57,7 @@ function App() {
 
   const [isDragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [position, setPosition] = useState({ x: 70, y: 30 });
+  const [position, setPosition] = useState({ x: 100, y: 100 });
 
   const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
     null
@@ -68,10 +68,16 @@ function App() {
   const startDrag = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const editorHeader = e.currentTarget;
+    const modal = editorHeader.parentElement;
+    const rect = modal?.getBoundingClientRect();
+
     setDragging(true);
+
     setOffset({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
+      x: e.clientX - rect!.left,
+      y: e.clientY - rect!.top,
     });
   };
 
@@ -212,7 +218,7 @@ function App() {
       {currentHitboxModal && (
         <div
           className="hitbox-modal"
-          style={{ top: position.y, left: position.x, position: "absolute" }}
+          style={{ top: position.y, left: position.x }}
         >
           <div
             className="hitbox-editor"
