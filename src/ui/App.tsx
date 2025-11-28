@@ -233,10 +233,7 @@ function App() {
   return (
     <div className="container">
       {currentHitboxModal && (
-        <div
-          className="hitbox-modal"
-          style={{ top: position.y, left: position.x }}
-        >
+        <div className="hitbox-modal">
           <div
             className="hitbox-editor"
             onMouseDown={startDrag}
@@ -487,7 +484,7 @@ function App() {
         </button>
 
         <button
-          onClick={() => addOneHitbox(currentHitboxModal)}
+          onClick={() => addOneHitbox(currentHitboxModal!)}
           className="file-buttons"
         >
           Create Hitbox
