@@ -59,7 +59,7 @@ function App() {
   const [enteringHitboxIds, setEnteringHitboxIds] = useState<number[]>([]);
 
   const [isDragging, setDragging] = useState(false);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [offset, setOffset] = useState({ x: 100, y: 100 });
   const [position, setPosition] = useState({ x: 100, y: 100 });
 
   const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
@@ -86,14 +86,14 @@ function App() {
 
   const stopDrag = () => setDragging(false);
 
-  const onDrag = (e: MouseEvent) => {
+  const onDrag = (e: MouseEvent, qSelect: string) => {
     if (!isDragging) return;
 
-    const modal = document.querySelector(".hitbox-modal") as HTMLElement;
+    const modal = document.querySelector(`${qSelect}`) as HTMLElement;
+    const currentModalPosX = e.clientX - offset.x;
+    const currentModalPosY = e.clientY - offset.y;
     if (modal) {
-      modal.style.transform = `translate(${e.clientX - offset.x}px, ${
-        e.clientY - offset.y
-      }px)`;
+      modal.style.transform = `translate(${currentModalPosX}px, ${currentModalPosY}px)`;
     }
   };
 
@@ -218,7 +218,7 @@ function App() {
   useEffect(() => {
     if (!isDragging) return;
 
-    const move = (e: MouseEvent) => onDrag(e);
+    const move = (e: MouseEvent) => onDrag(e, ".hitbox-modal");
     const up = () => stopDrag();
 
     document.addEventListener("mousemove", move, { capture: true });
