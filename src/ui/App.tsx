@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Slider from "@mui/material/Slider";
 import {
   ImageOff,
@@ -59,8 +59,8 @@ function App() {
   const [enteringHitboxIds, setEnteringHitboxIds] = useState<number[]>([]);
 
   const [isDragging, setDragging] = useState(false);
-  const [offset, setOffset] = useState({ x: 100, y: 100 });
-  const [position, setPosition] = useState({ x: 100, y: 100 });
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const modalPos = useRef({ x: 400, y: 200 });
 
   const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
     null
@@ -89,12 +89,15 @@ function App() {
   const onDrag = (e: MouseEvent, qSelect: string) => {
     if (!isDragging) return;
 
-    const modal = document.querySelector(`${qSelect}`) as HTMLElement;
-    const currentModalPosX = e.clientX - offset.x;
-    const currentModalPosY = e.clientY - offset.y;
-    if (modal) {
-      modal.style.transform = `translate(${currentModalPosX}px, ${currentModalPosY}px)`;
-    }
+    const modal = document.querySelector(qSelect) as HTMLElement;
+    const X = e.clientX - offset.x;
+    const Y = e.clientY - offset.y;
+
+    modalPos.current.x = X;
+    modalPos.current.y = Y;
+
+    modal.style.left = X + "px";
+    modal.style.top = Y + "px";
   };
 
   function removeOneHitbox(id: number) {
@@ -123,36 +126,34 @@ function App() {
   function addOneHitbox(id: number) {
     setEnteringHitboxIds((prev) => [...prev, id]);
 
-    setTimeout(() => {
-      setHitboxes((prev) => {
-        const usedIds = prev.map((h) => h.id).sort((a, b) => a - b);
+    setHitboxes((prev) => {
+      const usedIds = prev.map((h) => h.id).sort((a, b) => a - b);
 
-        let newId = 1;
-        for (let i = 0; i < usedIds.length; i++) {
-          if (usedIds[i] !== i + 1) {
-            newId = i + 1;
-            break;
-          }
-          newId = usedIds.length + 1;
+      let newId = 1;
+      for (let i = 0; i < usedIds.length; i++) {
+        if (usedIds[i] !== i + 1) {
+          newId = i + 1;
+          break;
         }
+        newId = usedIds.length + 1;
+      }
 
-        return [
-          ...prev,
-          {
-            id: newId,
-            origin_x: hitboxX,
-            origin_y: hitboxY,
-            width: hitboxWidth,
-            height: hitboxHeight,
-          },
-        ];
-      });
-      setHitboxX(hitboxX + 90);
-      setHitboxY(hitboxY + 90);
-      setEnteringHitboxIds((prev) =>
-        prev.filter((enteringId) => enteringId !== id)
-      );
-    }, ANIMATION_DURATION);
+      return [
+        ...prev,
+        {
+          id: newId,
+          origin_x: hitboxX,
+          origin_y: hitboxY,
+          width: hitboxWidth,
+          height: hitboxHeight,
+        },
+      ];
+    });
+    setHitboxX(hitboxX + 90);
+    setHitboxY(hitboxY + 90);
+    setEnteringHitboxIds((prev) =>
+      prev.filter((enteringId) => enteringId !== id)
+    );
   }
 
   async function handleOpen() {
@@ -233,7 +234,10 @@ function App() {
   return (
     <div className="container">
       {currentHitboxModal && (
-        <div className="hitbox-modal">
+        <div
+          className="hitbox-modal"
+          style={{ left: modalPos.current.x, top: modalPos.current.y }}
+        >
           <div
             className="hitbox-editor"
             onMouseDown={startDrag}
