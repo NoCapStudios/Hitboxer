@@ -24,13 +24,16 @@ interface hitboxProps {
 }
 
 function App() {
-  const attr = {
+  type Offset = { x: number; y: number };
+  type DragTarget = "modal" | "hitbox";
+
+  const FrameAttributes = {
     Frame: { min: 1, max: 1000, def: 1, step: 1 },
     Scale: { min: 1, max: 16, def: 10, step: 1 },
     BgSize: { min: 8, max: 240, def: 80, step: 8 },
   };
 
-  const hitboxAttr = {
+  const hitboxAttributes = {
     id: 1,
     x: 200,
     y: 200,
@@ -45,60 +48,69 @@ function App() {
   const [filePath, setFilePath] = useState<string | null>(null);
   const [imgFlippedHorizontally, setHorizontal] = useState<boolean>(true);
   const [imgFlippedVertically, setVertical] = useState<boolean>(true);
+  const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
 
-  const [frames, setFrameCount] = useState<number>(attr.Frame.def);
-  const [scale, setScaleSize] = useState<number>(attr.Scale.def);
-  const [bgsize, setBgSize] = useState<number>(attr.BgSize.def);
+  const [frames, setFrameCount] = useState<number>(FrameAttributes.Frame.def);
+  const [scale, setScaleSize] = useState<number>(FrameAttributes.Scale.def);
+  const [bgsize, setBgSize] = useState<number>(FrameAttributes.BgSize.def);
 
   const [hitboxes, setHitboxes] = useState<hitboxProps[]>([]);
-  const [hitboxX, setHitboxX] = useState<number>(hitboxAttr.x);
-  const [hitboxY, setHitboxY] = useState<number>(hitboxAttr.y);
-  const [hitboxWidth, setHitboxWidth] = useState<number>(hitboxAttr.width);
-  const [hitboxHeight, setHitboxHeight] = useState<number>(hitboxAttr.height);
+  const [hitboxX, setHitboxX] = useState<number>(hitboxAttributes.x);
+  const [hitboxY, setHitboxY] = useState<number>(hitboxAttributes.y);
+  const [hitboxWidth, setHitboxWidth] = useState<number>(
+    hitboxAttributes.width
+  );
+  const [hitboxHeight, setHitboxHeight] = useState<number>(
+    hitboxAttributes.height
+  );
   const [exitingHitboxIds, setExitingHitboxIds] = useState<number[]>([]);
   const [enteringHitboxIds, setEnteringHitboxIds] = useState<number[]>([]);
 
-  const [isDragging, setDragging] = useState(false);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const modalPos = useRef({ x: 400, y: 200 });
+  // State to track WHICH element is currently being dragged
+  const [isDragging, setDragging] = useState<"modal" | "hitbox" | null>(null);
+  // State to track WHICH hitbox ID is being dragged (only used if isDragging is 'hitbox')
+  const [draggingHitboxId, setDraggingHitboxId] = useState<number | null>(null);
+
+  // Modal Drag State
+  const [modalOffset, setModalOffset] = useState<Offset>({ x: 0, y: 0 });
+  const modalPos = useRef<Offset>({ x: 400, y: 200 }); // Ref for current modal position
+
+  // Hitbox Drag State
+  const [hitboxOffset, setHitboxOffset] = useState<Offset>({ x: 0, y: 0 });
+  // The hitboxPos ref is no longer strictly needed for drag, as position is managed in 'hitboxes' state
 
   const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
     null
   );
 
-  const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
-
-  const startDrag = (e: React.MouseEvent) => {
+  const startDrag = (e: React.MouseEvent, target: DragTarget) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const editorHeader = e.currentTarget;
-    const modal = editorHeader.parentElement;
-    const rect = modal?.getBoundingClientRect();
+    // The element whose bounding box is used for offset calculation
+    const draggableElement = e.currentTarget.parentElement;
+    const rect = draggableElement!.getBoundingClientRect();
 
-    setDragging(true);
+    setDragging(target);
 
-    setOffset({
-      x: e.clientX - rect!.left,
-      y: e.clientY - rect!.top,
-    });
+    const offset: Offset = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+
+    if (target === "modal") {
+      setModalOffset(offset);
+    } else if (target === "hitbox") {
+      setHitboxOffset(offset);
+    }
   };
 
-  const stopDrag = () => setDragging(false);
-
-  const onDrag = (e: MouseEvent, qSelect: string) => {
-    if (!isDragging) return;
-
-    const modal = document.querySelector(qSelect) as HTMLElement;
-    const X = e.clientX - offset.x;
-    const Y = e.clientY - offset.y;
-
-    modalPos.current.x = X;
-    modalPos.current.y = Y;
-
-    modal.style.left = X + "px";
-    modal.style.top = Y + "px";
+  const stopDrag = () => {
+    setDragging(null);
+    setDraggingHitboxId(null);
   };
+
+  // REMOVED: The old generic 'onDrag' function is no longer needed.
 
   function removeOneHitbox(id: number) {
     setExitingHitboxIds((prev) => [...prev, id]);
@@ -112,10 +124,10 @@ function App() {
   }
 
   function resetAttributes() {
-    setHitboxX(hitboxAttr.x);
-    setHitboxY(hitboxAttr.y);
-    setHitboxWidth(hitboxAttr.width);
-    setHitboxHeight(hitboxAttr.height);
+    setHitboxX(hitboxAttributes.x);
+    setHitboxY(hitboxAttributes.y);
+    setHitboxWidth(hitboxAttributes.width);
+    setHitboxHeight(hitboxAttributes.height);
   }
 
   function removeAllHitboxes() {
@@ -123,12 +135,10 @@ function App() {
     resetAttributes();
   }
 
-  function addOneHitbox(id: number) {
-    setEnteringHitboxIds((prev) => [...prev, id]);
-
+  function addOneHitbox() {
+    // New hitbox creation logic, slightly simplified
     setHitboxes((prev) => {
       const usedIds = prev.map((h) => h.id).sort((a, b) => a - b);
-
       let newId = 1;
       for (let i = 0; i < usedIds.length; i++) {
         if (usedIds[i] !== i + 1) {
@@ -138,23 +148,101 @@ function App() {
         newId = usedIds.length + 1;
       }
 
-      return [
-        ...prev,
-        {
-          id: newId,
-          origin_x: hitboxX,
-          origin_y: hitboxY,
-          width: hitboxWidth,
-          height: hitboxHeight,
-        },
-      ];
+      const newHitbox = {
+        id: newId,
+        // Use the default/state coordinates for the new hitbox
+        origin_x: hitboxX,
+        origin_y: hitboxY,
+        width: hitboxWidth,
+        height: hitboxHeight,
+      };
+
+      setEnteringHitboxIds((prev) => [...prev, newId]);
+
+      setTimeout(() => {
+        setEnteringHitboxIds((prev) =>
+          prev.filter((enteringId) => enteringId !== newId)
+        );
+      }, ANIMATION_DURATION);
+
+      return [...prev, newHitbox];
     });
-    setHitboxX(hitboxX + 90);
-    setHitboxY(hitboxY + 90);
-    setEnteringHitboxIds((prev) =>
-      prev.filter((enteringId) => enteringId !== id)
-    );
+    // Offset the next default hitbox position
+    setHitboxX((prevX) => prevX + 90);
+    setHitboxY((prevY) => prevY + 90);
   }
+  // --- END Logic Functions ---
+
+  // --- BEGIN useEffect Hooks for Independent Dragging ---
+
+  // 1. Modal Dragging Logic
+  useEffect(() => {
+    if (isDragging !== "modal") return;
+
+    const move = (e: MouseEvent) => {
+      const modal = document.querySelector(".hitbox-modal") as HTMLElement;
+      if (!modal) return;
+
+      const X = e.clientX - modalOffset.x;
+      const Y = e.clientY - modalOffset.y;
+
+      // Update the Ref (for rendering the modal on initial load/position)
+      modalPos.current.x = X;
+      modalPos.current.y = Y;
+
+      // Update the DOM element directly for performance during drag
+      modal.style.left = X + "px";
+      modal.style.top = Y + "px";
+    };
+
+    const up = () => stopDrag();
+
+    document.addEventListener("mousemove", move, { capture: true });
+    document.addEventListener("mouseup", up, { capture: true });
+
+    return () => {
+      document.removeEventListener("mousemove", move, { capture: true });
+      document.removeEventListener("mouseup", up, { capture: true });
+    };
+  }, [isDragging, modalOffset]);
+
+  // 2. Hitbox Dragging Logic (New/Corrected Hook)
+  useEffect(() => {
+    if (isDragging !== "hitbox" || draggingHitboxId === null) return;
+
+    const move = (e: MouseEvent) => {
+      const X = e.clientX - hitboxOffset.x;
+      const Y = e.clientY - hitboxOffset.y;
+
+      // Update the position of the specific dragged hitbox in the state
+      setHitboxes((prevHitboxes) =>
+        prevHitboxes.map((h) => {
+          if (h.id === draggingHitboxId) {
+            // Return the new position based on drag movement
+            return {
+              ...h,
+              origin_x: X,
+              origin_y: Y,
+            };
+          }
+          return h;
+        })
+      );
+    };
+
+    const up = () => stopDrag();
+
+    document.addEventListener("mousemove", move, { capture: true });
+    document.addEventListener("mouseup", up, { capture: true });
+
+    return () => {
+      document.removeEventListener("mousemove", move, { capture: true });
+      document.removeEventListener("mouseup", up, { capture: true });
+    };
+  }, [isDragging, draggingHitboxId, hitboxOffset]);
+  // --- END useEffect Hooks ---
+
+  // --- REST OF APP COMPONENT (UNMODIFIED FUNCTIONS) ---
 
   async function handleOpen() {
     const newFilePath = await window.electronAPI.openImageDialog();
@@ -181,7 +269,7 @@ function App() {
   }
 
   function handleColorCoding(scale: number) {
-    const atMax = scale === attr.Scale.max;
+    const atMax = scale === FrameAttributes.Scale.max;
     const sameScales = imgSize.width === imgSize.width * scale;
 
     const className = atMax
@@ -213,24 +301,11 @@ function App() {
 
   useEffect(() => {
     if (imgFlippedHorizontally) {
+      // Logic for horizontal flip if needed
     }
   }, [imgFlippedHorizontally]);
 
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const move = (e: MouseEvent) => onDrag(e, ".hitbox-modal");
-    const up = () => stopDrag();
-
-    document.addEventListener("mousemove", move, { capture: true });
-    document.addEventListener("mouseup", up, { capture: true });
-
-    return () => {
-      document.removeEventListener("mousemove", move, { capture: true });
-      document.removeEventListener("mouseup", up, { capture: true });
-    };
-  }, [isDragging, offset]);
-
+  // --- BEGIN RENDER ---
   return (
     <div className="container">
       {currentHitboxModal && (
@@ -240,7 +315,8 @@ function App() {
         >
           <div
             className="hitbox-editor"
-            onMouseDown={startDrag}
+            onMouseDown={(e) => startDrag(e, "modal")}
+            onMouseUp={stopDrag}
             style={{ cursor: isDragging ? "grabbing" : "grab" }}
           >
             <h2 className="hitbox-editor-header">Hitbox Editor Panel</h2>
@@ -295,7 +371,7 @@ function App() {
                   setHitboxes((prev) =>
                     prev.map((h) =>
                       h.id === currentHitboxModal
-                        ? { ...h, origin_x: hitboxAttr.x }
+                        ? { ...h, origin_x: hitboxAttributes.x }
                         : h
                     )
                   )
@@ -332,7 +408,7 @@ function App() {
                   setHitboxes((prev) =>
                     prev.map((h) =>
                       h.id === currentHitboxModal
-                        ? { ...h, origin_y: hitboxAttr.y }
+                        ? { ...h, origin_y: hitboxAttributes.y }
                         : h
                     )
                   )
@@ -371,7 +447,7 @@ function App() {
                   setHitboxes((prev) =>
                     prev.map((h) =>
                       h.id === currentHitboxModal
-                        ? { ...h, width: hitboxAttr.width }
+                        ? { ...h, width: hitboxAttributes.width }
                         : h
                     )
                   )
@@ -408,7 +484,7 @@ function App() {
                   setHitboxes((prev) =>
                     prev.map((h) =>
                       h.id === currentHitboxModal
-                        ? { ...h, height: hitboxAttr.height }
+                        ? { ...h, height: hitboxAttributes.height }
                         : h
                     )
                   )
@@ -465,7 +541,6 @@ function App() {
           <ImageOff color="white" size={"1rem"} /> <span>Remove Image</span>
         </button>
 
-        {/* Horizontal Flip */}
         <button
           onClick={() => setHorizontal(!imgFlippedHorizontally)}
           className="flip-buttons"
@@ -476,7 +551,6 @@ function App() {
           </span>
         </button>
 
-        {/* Vertical Flip */}
         <button
           onClick={() => setVertical(!imgFlippedVertically)}
           className="flip-buttons"
@@ -487,20 +561,16 @@ function App() {
           </span>
         </button>
 
-        <button
-          onClick={() => addOneHitbox(currentHitboxModal!)}
-          className="file-buttons"
-        >
+        <button onClick={() => addOneHitbox()} className="file-buttons">
           Create Hitbox
         </button>
 
-        {/* Frame Count */}
         <span className="span-style">
           Frame Count: {frames}{" "}
-          {frames === attr.Frame.min && (
+          {frames === FrameAttributes.Frame.min && (
             <span className="tiptool-text">(Default)</span>
           )}
-          {frames !== attr.Frame.min && (
+          {frames !== FrameAttributes.Frame.min && (
             <span className="tiptool-text">
               {" "}
               <RefreshCcw
@@ -511,7 +581,7 @@ function App() {
                   display: "inline-flex",
                   alignItems: "center",
                 }}
-                onClick={() => setFrameCount(attr.Frame.min)}
+                onClick={() => setFrameCount(FrameAttributes.Frame.min)}
               />
             </span>
           )}
@@ -521,19 +591,20 @@ function App() {
           type="number"
           className="input-styles"
           value={frames}
-          min={attr.Frame.min}
+          min={FrameAttributes.Frame.min}
           onChange={(e) =>
-            setFrameCount(Math.max(attr.Frame.min, Number(e.target.value)))
+            setFrameCount(
+              Math.max(FrameAttributes.Frame.min, Number(e.target.value))
+            )
           }
         />
 
-        {/* Scale */}
         <span>
           Sprite-sheet Scale: {scale}{" "}
-          {scale === attr.Scale.def && (
+          {scale === FrameAttributes.Scale.def && (
             <span className="tiptool-text">(Default)</span>
           )}
-          {scale !== attr.Scale.def && (
+          {scale !== FrameAttributes.Scale.def && (
             <span
               className="tiptool-text"
               style={{
@@ -545,20 +616,20 @@ function App() {
             >
               <RefreshCcw
                 size={ICON_SIZE}
-                onClick={() => setScaleSize(attr.Scale.def)}
+                onClick={() => setScaleSize(FrameAttributes.Scale.def)}
               />
             </span>
           )}
         </span>
 
         <Slider
-          defaultValue={attr.Scale.def}
+          defaultValue={FrameAttributes.Scale.def}
           value={scale}
           valueLabelDisplay="off"
-          shiftStep={attr.Scale.step}
-          step={attr.Scale.step}
-          min={attr.Scale.min}
-          max={attr.Scale.max}
+          shiftStep={FrameAttributes.Scale.step}
+          step={FrameAttributes.Scale.step}
+          min={FrameAttributes.Scale.min}
+          max={FrameAttributes.Scale.max}
           className="input-styles"
           onChange={(_e, v) => setScaleSize(v)}
           sx={{
@@ -594,13 +665,12 @@ function App() {
           }}
         />
 
-        {/* BG Size */}
         <span>
           Background Grid Size: {bgsize}{" "}
-          {bgsize === attr.BgSize.def && (
+          {bgsize === FrameAttributes.BgSize.def && (
             <span className="tiptool-text">(Default)</span>
           )}
-          {bgsize !== attr.BgSize.def && (
+          {bgsize !== FrameAttributes.BgSize.def && (
             <span
               className="tiptool-text"
               style={{
@@ -612,21 +682,21 @@ function App() {
             >
               <RefreshCcw
                 size={ICON_SIZE}
-                onClick={() => setBgSize(attr.BgSize.def)}
+                onClick={() => setBgSize(FrameAttributes.BgSize.def)}
               />
             </span>
           )}
         </span>
 
         <Slider
-          defaultValue={attr.BgSize.def}
+          defaultValue={FrameAttributes.BgSize.def}
           value={bgsize}
           valueLabelDisplay="off"
-          shiftStep={attr.BgSize.step}
-          step={attr.BgSize.step}
+          shiftStep={FrameAttributes.BgSize.step}
+          step={FrameAttributes.BgSize.step}
           marks
-          min={attr.BgSize.min}
-          max={attr.BgSize.max}
+          min={FrameAttributes.BgSize.min}
+          max={FrameAttributes.BgSize.max}
           onChange={(_e, v) => setBgSize(v)}
           sx={{
             color: "#305e49",
@@ -707,11 +777,21 @@ function App() {
               enteringHitboxIds.includes(id) ? "entering" : ""
             }`}
             style={{
+              // Use per-hitbox coordinates from state
               left: origin_x,
               top: origin_y,
               width,
               height,
+              cursor:
+                isDragging === "hitbox" && draggingHitboxId === id
+                  ? "grabbing"
+                  : "grab",
             }}
+            onMouseDown={(e) => {
+              setDraggingHitboxId(id);
+              startDrag(e, "hitbox");
+            }}
+            onMouseUp={stopDrag}
             onClick={() => setCurrentHitboxModal(id)}
           >
             Hitbox: {id}
