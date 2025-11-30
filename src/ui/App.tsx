@@ -11,6 +11,7 @@ import {
   Linkedin,
   RefreshCcw,
   X,
+  Settings,
 } from "lucide-react";
 import "./css/App.css";
 import "./css/HitboxEditor.css";
@@ -86,15 +87,33 @@ function App() {
 
     setDragging(target);
 
-    const offset: Offset = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
+    let offset: Offset = { x: 0, y: 0 };
 
     if (target === "modal") {
+      offset = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
       setModalOffset(offset);
     } else if (target === "hitbox") {
-      setHitboxOffset(offset);
+      const hitboxId = draggingHitboxId;
+      const currentHitbox = hitboxes.find((h) => h.id === hitboxId);
+
+      if (currentHitbox) {
+        const editorContainer = document.querySelector(".editor");
+        if (!editorContainer) return;
+
+        const editorRect = editorContainer.getBoundingClientRect();
+
+        const mouseXRelativeToEditor = e.clientX - editorRect.left;
+        const mouseYRelativeToEditor = e.clientY - editorRect.top;
+
+        offset = {
+          x: mouseXRelativeToEditor - currentHitbox.origin_x,
+          y: mouseYRelativeToEditor - currentHitbox.origin_y,
+        };
+        setHitboxOffset(offset);
+      }
     }
   };
 
@@ -160,66 +179,6 @@ function App() {
     setHitboxY((prevY) => prevY + 90);
   }
 
-  useEffect(() => {
-    if (isDragging !== "modal") return;
-
-    const move = (e: MouseEvent) => {
-      const modal = document.querySelector(".hitbox-modal") as HTMLElement;
-      if (!modal) return;
-
-      const X = e.clientX - modalOffset.x;
-      const Y = e.clientY - modalOffset.y;
-
-      modalPos.current.x = X;
-      modalPos.current.y = Y;
-
-      modal.style.left = X + "px";
-      modal.style.top = Y + "px";
-    };
-
-    const up = () => stopDrag();
-
-    document.addEventListener("mousemove", move, { capture: true });
-    document.addEventListener("mouseup", up, { capture: true });
-
-    return () => {
-      document.removeEventListener("mousemove", move, { capture: true });
-      document.removeEventListener("mouseup", up, { capture: true });
-    };
-  }, [isDragging, modalOffset]);
-
-  useEffect(() => {
-    if (isDragging !== "hitbox" || draggingHitboxId === null) return;
-
-    const move = (e: MouseEvent) => {
-      const X = e.clientX - hitboxOffset.x;
-      const Y = e.clientY - hitboxOffset.y;
-
-      setHitboxes((prevHitboxes) =>
-        prevHitboxes.map((h) => {
-          if (h.id === draggingHitboxId) {
-            return {
-              ...h,
-              origin_x: X,
-              origin_y: Y,
-            };
-          }
-          return h;
-        })
-      );
-    };
-
-    const up = () => stopDrag();
-
-    document.addEventListener("mousemove", move, { capture: true });
-    document.addEventListener("mouseup", up, { capture: true });
-
-    return () => {
-      document.removeEventListener("mousemove", move, { capture: true });
-      document.removeEventListener("mouseup", up, { capture: true });
-    };
-  }, [isDragging, draggingHitboxId, hitboxOffset]);
-
   async function handleOpen() {
     const newFilePath = await window.electronAPI.openImageDialog();
     if (!newFilePath) return;
@@ -280,6 +239,73 @@ function App() {
       // Logic for horizontal flip if needed
     }
   }, [imgFlippedHorizontally]);
+
+  useEffect(() => {
+    if (isDragging !== "modal") return;
+
+    const move = (e: MouseEvent) => {
+      const modal = document.querySelector(".hitbox-modal") as HTMLElement;
+      if (!modal) return;
+
+      const X = e.clientX - modalOffset.x;
+      const Y = e.clientY - modalOffset.y;
+
+      modalPos.current.x = X;
+      modalPos.current.y = Y;
+
+      modal.style.left = X + "px";
+      modal.style.top = Y + "px";
+    };
+
+    const up = () => stopDrag();
+
+    document.addEventListener("mousemove", move, { capture: true });
+    document.addEventListener("mouseup", up, { capture: true });
+
+    return () => {
+      document.removeEventListener("mousemove", move, { capture: true });
+      document.removeEventListener("mouseup", up, { capture: true });
+    };
+  }, [isDragging, modalOffset]);
+
+  useEffect(() => {
+    if (isDragging !== "hitbox" || draggingHitboxId === null) return;
+
+    const editorContainer = document.querySelector(".editor");
+    if (!editorContainer) return;
+    const editorRect = editorContainer.getBoundingClientRect();
+
+    const move = (e: MouseEvent) => {
+      const mouseXRelativeToEditor = e.clientX - editorRect.left;
+      const mouseYRelativeToEditor = e.clientY - editorRect.top;
+
+      const X = mouseXRelativeToEditor - hitboxOffset.x;
+      const Y = mouseYRelativeToEditor - hitboxOffset.y;
+
+      setHitboxes((prevHitboxes) =>
+        prevHitboxes.map((h) => {
+          if (h.id === draggingHitboxId) {
+            return {
+              ...h,
+              origin_x: X,
+              origin_y: Y,
+            };
+          }
+          return h;
+        })
+      );
+    };
+
+    const up = () => stopDrag();
+
+    document.addEventListener("mousemove", move, { capture: true });
+    document.addEventListener("mouseup", up, { capture: true });
+
+    return () => {
+      document.removeEventListener("mousemove", move, { capture: true });
+      document.removeEventListener("mouseup", up, { capture: true });
+    };
+  }, [isDragging, draggingHitboxId, hitboxOffset, hitboxes]);
 
   return (
     <div className="container">
@@ -721,6 +747,8 @@ function App() {
               "- No Image Loaded -"
             )}
           </p>
+
+          <Settings size={ICON_SIZE} color="#fff" className="setting" />
         </div>
 
         {imgPath && (
