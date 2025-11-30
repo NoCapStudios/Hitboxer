@@ -66,19 +66,13 @@ function App() {
   const [exitingHitboxIds, setExitingHitboxIds] = useState<number[]>([]);
   const [enteringHitboxIds, setEnteringHitboxIds] = useState<number[]>([]);
 
-  // State to track WHICH element is currently being dragged
   const [isDragging, setDragging] = useState<"modal" | "hitbox" | null>(null);
-  // State to track WHICH hitbox ID is being dragged (only used if isDragging is 'hitbox')
   const [draggingHitboxId, setDraggingHitboxId] = useState<number | null>(null);
 
-  // Modal Drag State
   const [modalOffset, setModalOffset] = useState<Offset>({ x: 0, y: 0 });
-  const modalPos = useRef<Offset>({ x: 400, y: 200 }); // Ref for current modal position
+  const modalPos = useRef<Offset>({ x: 400, y: 200 });
 
-  // Hitbox Drag State
   const [hitboxOffset, setHitboxOffset] = useState<Offset>({ x: 0, y: 0 });
-  // The hitboxPos ref is no longer strictly needed for drag, as position is managed in 'hitboxes' state
-
   const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
     null
   );
@@ -87,7 +81,6 @@ function App() {
     e.preventDefault();
     e.stopPropagation();
 
-    // The element whose bounding box is used for offset calculation
     const draggableElement = e.currentTarget.parentElement;
     const rect = draggableElement!.getBoundingClientRect();
 
@@ -109,8 +102,6 @@ function App() {
     setDragging(null);
     setDraggingHitboxId(null);
   };
-
-  // REMOVED: The old generic 'onDrag' function is no longer needed.
 
   function removeOneHitbox(id: number) {
     setExitingHitboxIds((prev) => [...prev, id]);
@@ -136,7 +127,6 @@ function App() {
   }
 
   function addOneHitbox() {
-    // New hitbox creation logic, slightly simplified
     setHitboxes((prev) => {
       const usedIds = prev.map((h) => h.id).sort((a, b) => a - b);
       let newId = 1;
@@ -150,7 +140,6 @@ function App() {
 
       const newHitbox = {
         id: newId,
-        // Use the default/state coordinates for the new hitbox
         origin_x: hitboxX,
         origin_y: hitboxY,
         width: hitboxWidth,
@@ -167,15 +156,10 @@ function App() {
 
       return [...prev, newHitbox];
     });
-    // Offset the next default hitbox position
     setHitboxX((prevX) => prevX + 90);
     setHitboxY((prevY) => prevY + 90);
   }
-  // --- END Logic Functions ---
 
-  // --- BEGIN useEffect Hooks for Independent Dragging ---
-
-  // 1. Modal Dragging Logic
   useEffect(() => {
     if (isDragging !== "modal") return;
 
@@ -186,11 +170,9 @@ function App() {
       const X = e.clientX - modalOffset.x;
       const Y = e.clientY - modalOffset.y;
 
-      // Update the Ref (for rendering the modal on initial load/position)
       modalPos.current.x = X;
       modalPos.current.y = Y;
 
-      // Update the DOM element directly for performance during drag
       modal.style.left = X + "px";
       modal.style.top = Y + "px";
     };
@@ -206,7 +188,6 @@ function App() {
     };
   }, [isDragging, modalOffset]);
 
-  // 2. Hitbox Dragging Logic (New/Corrected Hook)
   useEffect(() => {
     if (isDragging !== "hitbox" || draggingHitboxId === null) return;
 
@@ -214,11 +195,9 @@ function App() {
       const X = e.clientX - hitboxOffset.x;
       const Y = e.clientY - hitboxOffset.y;
 
-      // Update the position of the specific dragged hitbox in the state
       setHitboxes((prevHitboxes) =>
         prevHitboxes.map((h) => {
           if (h.id === draggingHitboxId) {
-            // Return the new position based on drag movement
             return {
               ...h,
               origin_x: X,
@@ -240,9 +219,6 @@ function App() {
       document.removeEventListener("mouseup", up, { capture: true });
     };
   }, [isDragging, draggingHitboxId, hitboxOffset]);
-  // --- END useEffect Hooks ---
-
-  // --- REST OF APP COMPONENT (UNMODIFIED FUNCTIONS) ---
 
   async function handleOpen() {
     const newFilePath = await window.electronAPI.openImageDialog();
@@ -305,7 +281,6 @@ function App() {
     }
   }, [imgFlippedHorizontally]);
 
-  // --- BEGIN RENDER ---
   return (
     <div className="container">
       {currentHitboxModal && (
