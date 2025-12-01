@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import "./css/App.css";
 import "./css/HitboxEditor.css";
+import "./css/settings.css";
 
 interface hitboxProps {
   id: number;
@@ -77,6 +78,9 @@ function App() {
   const [currentHitboxModal, setCurrentHitboxModal] = useState<number | null>(
     null
   );
+
+  const [openSettings, setOpenSettings] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const startDrag = (e: React.MouseEvent, target: DragTarget) => {
     e.preventDefault();
@@ -234,11 +238,17 @@ function App() {
     );
   }
 
-  useEffect(() => {
-    if (imgFlippedHorizontally) {
-      // Logic for horizontal flip if needed
+  const toggleSettings = () => {
+    if (openSettings) {
+      setClosing(true);
+      setTimeout(() => {
+        setOpenSettings(false);
+        setClosing(false);
+      }, 250);
+    } else {
+      setOpenSettings(true);
     }
-  }, [imgFlippedHorizontally]);
+  };
 
   useEffect(() => {
     if (isDragging !== "modal") return;
@@ -748,8 +758,34 @@ function App() {
             )}
           </p>
 
-          <Settings size={ICON_SIZE} color="#fff" className="setting" />
+          <Settings
+            size={ICON_SIZE}
+            color="#fff"
+            className={`setting ${openSettings ? "spin-right" : "spin-left"}`}
+            onClick={() => setOpenSettings(!openSettings)}
+          />
         </div>
+
+        {openSettings && (
+          <>
+            <div
+              className={`settings-overlay ${closing ? "closing" : ""}`}
+              onClick={toggleSettings}
+            />
+            <div className={`settings-modal ${closing ? "closing" : ""}`}>
+              <div className="settings-header">
+                <span>Settings</span>
+                <span className="close-btn" onClick={toggleSettings}>
+                  ×
+                </span>
+              </div>
+
+              <input type="number" />
+              <input type="number" />
+              <input type="number" />
+            </div>
+          </>
+        )}
 
         {imgPath && (
           <div
@@ -780,7 +816,6 @@ function App() {
               enteringHitboxIds.includes(id) ? "entering" : ""
             }`}
             style={{
-              // Use per-hitbox coordinates from state
               left: origin_x,
               top: origin_y,
               width,
