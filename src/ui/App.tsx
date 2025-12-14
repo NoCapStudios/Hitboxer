@@ -17,22 +17,37 @@ import "./css/App.css";
 import "./css/HitboxEditor.css";
 import "./css/settings.css";
 
-interface hitboxProps {
-  id: number;
-  origin_x: number;
-  origin_y: number;
-  width: number;
-  height: number;
-}
-
 function App() {
   type Offset = { x: number; y: number };
   type DragTarget = "modal" | "hitbox";
 
-  const FrameAttributes = {
-    Frame: { min: 1, max: 1000, def: 1, step: 1 },
-    Scale: { min: 1, max: 16, def: 10, step: 1 },
-    BgSize: { min: 8, max: 240, def: 80, step: 8 },
+  type hitboxProps = {
+    id: number;
+    origin_x: number;
+    origin_y: number;
+    width: number;
+    height: number;
+  };
+
+  const FRAME_CONFIG = {
+    min: 1,
+    max: 1000,
+    def: 1,
+    step: 1,
+  };
+
+  const SCALE_CONFIG = {
+    min: 1,
+    max: 16,
+    def: 10,
+    step: 1,
+  };
+
+  const BGSIZE_CONFIG = {
+    min: 8,
+    max: 240,
+    def: 80,
+    step: 8,
   };
 
   const hitboxAttributes = {
@@ -52,9 +67,11 @@ function App() {
   const [imgFlippedVertically, setVertical] = useState<boolean>(true);
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
 
-  const [frames, setFrameCount] = useState<number>(FrameAttributes.Frame.def);
-  const [scale, setScaleSize] = useState<number>(FrameAttributes.Scale.def);
-  const [bgsize, setBgSize] = useState<number>(FrameAttributes.BgSize.def);
+  const [frames, setFrameCount] = useState<number>(FRAME_CONFIG.def);
+
+  const [scale, setScaleSize] = useState<number>(SCALE_CONFIG.def);
+
+  const [bgsize, setBgSize] = useState<number>(BGSIZE_CONFIG.def);
 
   const [hitboxes, setHitboxes] = useState<hitboxProps[]>([]);
   const [hitboxX, setHitboxX] = useState<number>(hitboxAttributes.x);
@@ -207,9 +224,9 @@ function App() {
     setImgSize({ width: naturalWidth, height: naturalHeight });
   }
 
-  function handleColorCoding(scale: number) {
-    const atMax = scale === FrameAttributes.Scale.max;
-    const sameScales = imgSize.width === imgSize.width * scale;
+  function handleColorCoding(currentScale: number) {
+    const atMax = currentScale === SCALE_CONFIG.max;
+    const sameScales = imgSize.width === imgSize.width * scale.def;
 
     const className = atMax
       ? "scale-max"
@@ -228,11 +245,11 @@ function App() {
         <div className="divider"></div>
         <span>
           Scaled Image Width:{" "}
-          <b className={className}>{imgSize.width * scale} px</b>
+          <b className={className}>{imgSize.width * scale.def} px</b>
         </span>
         <span>
           Scaled Image Height:{" "}
-          <b className={className}>{imgSize.height * scale} px</b>
+          <b className={className}>{imgSize.height * scale.def} px</b>
         </span>
       </>
     );
@@ -577,11 +594,11 @@ function App() {
         </button>
 
         <span className="span-style">
-          Frame Count: {frames}{" "}
-          {frames === FrameAttributes.Frame.min && (
+          Frame Count: {frames.def}
+          {frames === frames.min && (
             <span className="tiptool-text">(Default)</span>
           )}
-          {frames !== FrameAttributes.Frame.min && (
+          {frames !== frames.min && (
             <span className="tiptool-text">
               {" "}
               <RefreshCcw
@@ -592,7 +609,7 @@ function App() {
                   display: "inline-flex",
                   alignItems: "center",
                 }}
-                onClick={() => setFrameCount(FrameAttributes.Frame.min)}
+                onClick={() => setFrameCount(bgsize.min)}
               />
             </span>
           )}
@@ -602,20 +619,18 @@ function App() {
           type="number"
           className="input-styles"
           value={frames}
-          min={FrameAttributes.Frame.min}
+          min={bgsize.min}
           onChange={(e) =>
-            setFrameCount(
-              Math.max(FrameAttributes.Frame.min, Number(e.target.value))
-            )
+            setFrameCount(Math.max(bgsize.min, Number(e.target.value)))
           }
         />
 
         <span>
           Sprite-sheet Scale: {scale}{" "}
-          {scale === FrameAttributes.Scale.def && (
+          {scale === bgsize.def && (
             <span className="tiptool-text">(Default)</span>
           )}
-          {scale !== FrameAttributes.Scale.def && (
+          {scale !== bgsize.def && (
             <span
               className="tiptool-text"
               style={{
@@ -627,20 +642,20 @@ function App() {
             >
               <RefreshCcw
                 size={ICON_SIZE}
-                onClick={() => setScaleSize(FrameAttributes.Scale.def)}
+                onClick={() => setScaleSize(bgsize.def)}
               />
             </span>
           )}
         </span>
 
         <Slider
-          defaultValue={FrameAttributes.Scale.def}
+          defaultValue={bgsize.def}
           value={scale}
           valueLabelDisplay="off"
-          shiftStep={FrameAttributes.Scale.step}
-          step={FrameAttributes.Scale.step}
-          min={FrameAttributes.Scale.min}
-          max={FrameAttributes.Scale.max}
+          shiftStep={bgsize.step}
+          step={bgsize.step}
+          min={bgsize.min}
+          max={bgsize.max}
           className="input-styles"
           onChange={(_e, v) => setScaleSize(v)}
           sx={{
@@ -678,10 +693,10 @@ function App() {
 
         <span>
           Background Grid Size: {bgsize}{" "}
-          {bgsize === FrameAttributes.BgSize.def && (
+          {bgsize === bgsize.def && (
             <span className="tiptool-text">(Default)</span>
           )}
-          {bgsize !== FrameAttributes.BgSize.def && (
+          {bgsize !== bgsize.def && (
             <span
               className="tiptool-text"
               style={{
@@ -693,21 +708,21 @@ function App() {
             >
               <RefreshCcw
                 size={ICON_SIZE}
-                onClick={() => setBgSize(FrameAttributes.BgSize.def)}
+                onClick={() => setBgSize(bgsize.def)}
               />
             </span>
           )}
         </span>
 
         <Slider
-          defaultValue={FrameAttributes.BgSize.def}
+          defaultValue={bgsize.def}
           value={bgsize}
           valueLabelDisplay="off"
-          shiftStep={FrameAttributes.BgSize.step}
-          step={FrameAttributes.BgSize.step}
+          shiftStep={bgsize.step}
+          step={bgsize.step}
           marks
-          min={FrameAttributes.BgSize.min}
-          max={FrameAttributes.BgSize.max}
+          min={bgsize.min}
+          max={bgsize.max}
           onChange={(_e, v) => setBgSize(v)}
           sx={{
             color: "#305e49",
@@ -742,7 +757,7 @@ function App() {
           }}
         />
 
-        {handleColorCoding(scale!)}
+        {handleColorCoding(scale.def)}
         <div className=""></div>
       </div>
 
@@ -779,7 +794,81 @@ function App() {
                   ×
                 </span>
               </div>
+              <Slider
+                value={scale.def}
+                min={scale.min}
+                defaultValue={scale.def}
+                max={scale.max}
+                onChange={(_e, v) => setScaleSize(v as number)}
+                valueLabelDisplay="auto"
+                sx={{
+                  color: "#305e49",
+                  height: 6,
 
+                  "& .MuiSlider-thumb": {
+                    width: 16,
+                    height: 16,
+                    borderRadius: 2,
+                    backgroundColor: "#fff",
+                    border: "2px solid #305e49",
+                    transition: "0.2s",
+                    "&:hover": { boxShadow: "0 0 0 8px rgba(48,94,73,0.16)" },
+                  },
+
+                  "& .MuiSlider-track": {
+                    border: "none",
+                  },
+
+                  "& .MuiSlider-rail": {
+                    opacity: 0.3,
+                    backgroundColor: "#305e49",
+                  },
+
+                  "& .MuiSlider-thumb.Mui-focusVisible": {
+                    boxShadow: "0 0 0 8px rgba(48,94,73,0.24)",
+                  },
+
+                  "& .MuiSlider-thumb.Mui-active": {
+                    boxShadow: "0 0 0 14px rgba(48,94,73,0.16)",
+                  },
+                }}
+              />
+              <Slider
+                value={bgsize.def}
+                // onChange={}
+                valueLabelDisplay="auto"
+                sx={{
+                  color: "#305e49",
+                  height: 6,
+
+                  "& .MuiSlider-thumb": {
+                    width: 16,
+                    height: 16,
+                    borderRadius: 2,
+                    backgroundColor: "#fff",
+                    border: "2px solid #305e49",
+                    transition: "0.2s",
+                    "&:hover": { boxShadow: "0 0 0 8px rgba(48,94,73,0.16)" },
+                  },
+
+                  "& .MuiSlider-track": {
+                    border: "none",
+                  },
+
+                  "& .MuiSlider-rail": {
+                    opacity: 0.3,
+                    backgroundColor: "#305e49",
+                  },
+
+                  "& .MuiSlider-thumb.Mui-focusVisible": {
+                    boxShadow: "0 0 0 8px rgba(48,94,73,0.24)",
+                  },
+
+                  "& .MuiSlider-thumb.Mui-active": {
+                    boxShadow: "0 0 0 14px rgba(48,94,73,0.16)",
+                  },
+                }}
+              />
               <input type="number" />
               <input type="number" />
               <input type="number" />
@@ -791,7 +880,7 @@ function App() {
           <div
             className="image-viewer checkerboard-conic-background "
             style={{
-              backgroundSize: `${bgsize * 4}px ${bgsize * 4}px`,
+              backgroundSize: `${bgsize.def * 4}px ${bgsize.def * 4}px`,
             }}
           >
             <img
@@ -799,8 +888,8 @@ function App() {
               className={`image-border ${
                 imgFlippedHorizontally ? "" : "flip-h"
               } ${imgFlippedVertically ? "" : "flip-v"}`}
-              width={imgSize.width * scale}
-              height={imgSize.height * scale}
+              width={imgSize.width * scale.def}
+              height={imgSize.height * scale.def}
               onLoad={handleImageLoad}
               draggable={false}
             />

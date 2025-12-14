@@ -40,8 +40,9 @@ body {
 
 .tooltip-bar {
   flex: 0 0 5%;
+  width: 98%;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
 }
 
