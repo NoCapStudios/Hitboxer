@@ -124,12 +124,12 @@ function App() {
 
         const editorRect = editorContainer.getBoundingClientRect();
 
-        const mouseXRelativeToEditor = e.clientX - editorRect.left;
-        const mouseYRelativeToEditor = e.clientY - editorRect.top;
+        const hitboxElement = e.currentTarget as HTMLElement;
+        const hitboxRect = hitboxElement.getBoundingClientRect();
 
         offset = {
-          x: mouseXRelativeToEditor - currentHitbox.origin_x,
-          y: mouseYRelativeToEditor - currentHitbox.origin_y,
+          x: e.clientX - hitboxRect.left,
+          y: e.clientY - hitboxRect.top,
         };
         setHitboxOffset(offset);
       }
@@ -224,7 +224,7 @@ function App() {
 
   function handleColorCoding(currentScale: number) {
     const atMax = currentScale === SCALE_CONFIG.max;
-    const sameScales = imgSize.width === imgSize.width * SCALE_CONFIG.def;
+    const sameScales = imgSize.width === imgSize.width * scale;
 
     const className = atMax
       ? "scale-max"
@@ -243,11 +243,11 @@ function App() {
         <div className="divider"></div>
         <span>
           Scaled Image Width:{" "}
-          <b className={className}>{imgSize.width * SCALE_CONFIG?.def} px</b>
+          <b className={className}>{imgSize.width * scale} px</b>
         </span>
         <span>
           Scaled Image Height:{" "}
-          <b className={className}>{imgSize.height * SCALE_CONFIG?.def} px</b>
+          <b className={className}>{imgSize.height * scale} px</b>
         </span>
       </>
     );
