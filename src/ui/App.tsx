@@ -68,9 +68,7 @@ function App() {
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
 
   const [frames, setFrameCount] = useState<number>(FRAME_CONFIG.def);
-
   const [scale, setScaleSize] = useState<number>(SCALE_CONFIG.def);
-
   const [bgsize, setBgSize] = useState<number>(BGSIZE_CONFIG.def);
 
   const [hitboxes, setHitboxes] = useState<hitboxProps[]>([]);
@@ -226,7 +224,7 @@ function App() {
 
   function handleColorCoding(currentScale: number) {
     const atMax = currentScale === SCALE_CONFIG.max;
-    const sameScales = imgSize.width === imgSize.width * scale.def;
+    const sameScales = imgSize.width === imgSize.width * SCALE_CONFIG.def;
 
     const className = atMax
       ? "scale-max"
@@ -245,11 +243,11 @@ function App() {
         <div className="divider"></div>
         <span>
           Scaled Image Width:{" "}
-          <b className={className}>{imgSize.width * scale.def} px</b>
+          <b className={className}>{imgSize.width * SCALE_CONFIG?.def} px</b>
         </span>
         <span>
           Scaled Image Height:{" "}
-          <b className={className}>{imgSize.height * scale.def} px</b>
+          <b className={className}>{imgSize.height * SCALE_CONFIG?.def} px</b>
         </span>
       </>
     );
@@ -594,11 +592,11 @@ function App() {
         </button>
 
         <span className="span-style">
-          Frame Count: {frames.def}
-          {frames === frames.min && (
+          Frame Count: {frames}
+          {frames === FRAME_CONFIG.min && (
             <span className="tiptool-text">(Default)</span>
           )}
-          {frames !== frames.min && (
+          {frames !== FRAME_CONFIG.min && (
             <span className="tiptool-text">
               {" "}
               <RefreshCcw
@@ -609,7 +607,7 @@ function App() {
                   display: "inline-flex",
                   alignItems: "center",
                 }}
-                onClick={() => setFrameCount(bgsize.min)}
+                onClick={() => setFrameCount(FRAME_CONFIG.def)}
               />
             </span>
           )}
@@ -619,18 +617,18 @@ function App() {
           type="number"
           className="input-styles"
           value={frames}
-          min={bgsize.min}
+          min={FRAME_CONFIG.min}
           onChange={(e) =>
-            setFrameCount(Math.max(bgsize.min, Number(e.target.value)))
+            setFrameCount(Math.max(FRAME_CONFIG.min, Number(e.target.value)))
           }
         />
 
         <span>
           Sprite-sheet Scale: {scale}{" "}
-          {scale === bgsize.def && (
+          {scale === SCALE_CONFIG.def && (
             <span className="tiptool-text">(Default)</span>
           )}
-          {scale !== bgsize.def && (
+          {scale !== SCALE_CONFIG.def && (
             <span
               className="tiptool-text"
               style={{
@@ -642,20 +640,20 @@ function App() {
             >
               <RefreshCcw
                 size={ICON_SIZE}
-                onClick={() => setScaleSize(bgsize.def)}
+                onClick={() => setScaleSize(SCALE_CONFIG.def)}
               />
             </span>
           )}
         </span>
 
         <Slider
-          defaultValue={bgsize.def}
+          defaultValue={SCALE_CONFIG.def}
           value={scale}
           valueLabelDisplay="off"
-          shiftStep={bgsize.step}
-          step={bgsize.step}
-          min={bgsize.min}
-          max={bgsize.max}
+          shiftStep={SCALE_CONFIG.step}
+          step={SCALE_CONFIG.step}
+          min={SCALE_CONFIG.min}
+          max={SCALE_CONFIG.max}
           className="input-styles"
           onChange={(_e, v) => setScaleSize(v)}
           sx={{
@@ -693,10 +691,10 @@ function App() {
 
         <span>
           Background Grid Size: {bgsize}{" "}
-          {bgsize === bgsize.def && (
+          {bgsize === BGSIZE_CONFIG.def && (
             <span className="tiptool-text">(Default)</span>
           )}
-          {bgsize !== bgsize.def && (
+          {bgsize !== BGSIZE_CONFIG.def && (
             <span
               className="tiptool-text"
               style={{
@@ -708,21 +706,21 @@ function App() {
             >
               <RefreshCcw
                 size={ICON_SIZE}
-                onClick={() => setBgSize(bgsize.def)}
+                onClick={() => setBgSize(BGSIZE_CONFIG.def)}
               />
             </span>
           )}
         </span>
 
         <Slider
-          defaultValue={bgsize.def}
+          defaultValue={BGSIZE_CONFIG.def}
           value={bgsize}
           valueLabelDisplay="off"
-          shiftStep={bgsize.step}
-          step={bgsize.step}
+          shiftStep={BGSIZE_CONFIG.step}
+          step={BGSIZE_CONFIG.step}
           marks
-          min={bgsize.min}
-          max={bgsize.max}
+          min={BGSIZE_CONFIG.min}
+          max={BGSIZE_CONFIG.max}
           onChange={(_e, v) => setBgSize(v)}
           sx={{
             color: "#305e49",
@@ -757,7 +755,7 @@ function App() {
           }}
         />
 
-        {handleColorCoding(scale.def)}
+        {handleColorCoding(scale)}
         <div className=""></div>
       </div>
 
@@ -795,10 +793,10 @@ function App() {
                 </span>
               </div>
               <Slider
-                value={scale.def}
-                min={scale.min}
-                defaultValue={scale.def}
-                max={scale.max}
+                value={SCALE_CONFIG.def}
+                min={SCALE_CONFIG.min}
+                defaultValue={SCALE_CONFIG.def}
+                max={SCALE_CONFIG.max}
                 onChange={(_e, v) => setScaleSize(v as number)}
                 valueLabelDisplay="auto"
                 sx={{
@@ -834,7 +832,7 @@ function App() {
                 }}
               />
               <Slider
-                value={bgsize.def}
+                value={SCALE_CONFIG.def}
                 // onChange={}
                 valueLabelDisplay="auto"
                 sx={{
@@ -880,7 +878,7 @@ function App() {
           <div
             className="image-viewer checkerboard-conic-background "
             style={{
-              backgroundSize: `${bgsize.def * 4}px ${bgsize.def * 4}px`,
+              backgroundSize: `${bgsize * 4}px ${bgsize * 4}px`,
             }}
           >
             <img
@@ -888,8 +886,8 @@ function App() {
               className={`image-border ${
                 imgFlippedHorizontally ? "" : "flip-h"
               } ${imgFlippedVertically ? "" : "flip-v"}`}
-              width={imgSize.width * scale.def}
-              height={imgSize.height * scale.def}
+              width={imgSize.width * scale}
+              height={imgSize.height * scale}
               onLoad={handleImageLoad}
               draggable={false}
             />
