@@ -101,38 +101,44 @@ function App() {
     e.preventDefault();
     e.stopPropagation();
 
-    const draggableElement = e.currentTarget.parentElement;
-    const rect = draggableElement!.getBoundingClientRect();
-
     setDragging(target);
 
-    let offset: Offset = { x: 0, y: 0 };
-
     if (target === "modal") {
-      offset = {
+      const draggableElement = e.currentTarget.parentElement;
+      if (!draggableElement) return;
+      const rect = draggableElement.getBoundingClientRect();
+      const offset: Offset = {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
       };
       setModalOffset(offset);
-    } else if (target === "hitbox") {
-      const hitboxId = draggingHitboxId;
+      return;
+    }
+
+    if (target === "hitbox") {
+      const editorContainer = document.querySelector(".editor");
+      if (!editorContainer) return;
+
+      const editorRect = editorContainer.getBoundingClientRect();
+
+      const mouseXRelativeToEditor = e.clientX - editorRect.left;
+      const mouseYRelativeToEditor = e.clientY - editorRect.top;
+
+      const hitboxId = (e.currentTarget as HTMLElement).dataset.id
+        ? Number((e.currentTarget as HTMLElement).dataset.id)
+        : draggingHitboxId;
+
+      if (hitboxId == null) return;
+
       const currentHitbox = hitboxes.find((h) => h.id === hitboxId);
+      if (!currentHitbox) return;
 
-      if (currentHitbox) {
-        const editorContainer = document.querySelector(".editor");
-        if (!editorContainer) return;
-
-        const editorRect = editorContainer.getBoundingClientRect();
-
-        const hitboxElement = e.currentTarget as HTMLElement;
-        const hitboxRect = hitboxElement.getBoundingClientRect();
-
-        offset = {
-          x: e.clientX - hitboxRect.left,
-          y: e.clientY - hitboxRect.top,
-        };
-        setHitboxOffset(offset);
-      }
+      const offset: Offset = {
+        x: mouseXRelativeToEditor - currentHitbox.origin_x,
+        y: mouseYRelativeToEditor - currentHitbox.origin_y,
+      };
+      setHitboxOffset(offset);
+      setDraggingHitboxId(hitboxId);
     }
   };
 
@@ -897,6 +903,7 @@ function App() {
         {hitboxes.map(({ id, origin_x, origin_y, width, height }) => (
           <div
             key={id}
+            data-id={id}
             className={`${
               currentHitboxModal === id ? "highlighted-box" : "box"
             } ${exitingHitboxIds.includes(id) ? "exiting" : ""} ${
@@ -913,7 +920,6 @@ function App() {
                   : "grab",
             }}
             onMouseDown={(e) => {
-              setDraggingHitboxId(id);
               startDrag(e, "hitbox");
             }}
             onMouseUp={stopDrag}
