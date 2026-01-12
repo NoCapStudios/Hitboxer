@@ -1,10 +1,58 @@
-import { app, BrowserWindow, ipcMain, dialog, screen } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, Menu } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function createMenu(mainWindow) {
+  const template = [
+    {
+      label: "File",
+      submenu: [
+        {
+          label: "Add Image",
+          accelerator: "CmdOrCtrl+O",
+          click: () => {
+            mainWindow.webContents.send("menu:add-image");
+          },
+        },
+        {
+          label: "Remove Image",
+          accelerator: "CmdOrCtrl+W",
+          click: () => {
+            mainWindow.webContents.send("menu:remove-image");
+          },
+        },
+        { type: "separator" },
+        {
+          role: "quit",
+        },
+      ],
+    },
+    {
+      label: "Folder",
+      submenu: [
+        {
+          label: "Open Folder",
+          click: () => {
+            console.log("Menu: open-folder clicked");
+            mainWindow.webContents.send("menu:open-folder");
+          },
+        },
+        {
+          label: "Clear Folder",
+          click: () => {
+            mainWindow.webContents.send("menu:clear-folder");
+          },
+        },
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+}
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1000,
@@ -17,6 +65,7 @@ function createWindow() {
     }
   });
   mainWindow.loadURL("http://localhost:5173");
+  createMenu(mainWindow)
 }
 
 app.whenReady().then(() => {

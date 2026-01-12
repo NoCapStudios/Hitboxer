@@ -60,6 +60,7 @@ function App() {
 
   const ICON_SIZE = 18;
   const ANIMATION_DURATION = 300;
+  const DRAG_THRESHOLD = 5;
 
   const [imgPath, setImgPath] = useState<string | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
@@ -96,6 +97,37 @@ function App() {
 
   const [openSettings, setOpenSettings] = useState(false);
   const [closing, setClosing] = useState(false);
+
+  const [isDragAction, setIsDragAction] = useState(false);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleHitboxMouseDown = (e: React.MouseEvent, id: number) => {
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    setIsDragAction(false);
+
+    setDraggingHitboxId(id);
+    startDrag(e, "hitbox");
+  };
+
+  const handleHitboxMouseMove = (e: MouseEvent) => {
+    if (!dragStartRef.current) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist > DRAG_THRESHOLD && !isDragAction) {
+      setIsDragAction(true);
+    }
+  };
+
+  const handleHitboxMouseUp = (id: number) => {
+    stopDrag();
+    dragStartRef.current = null;
+
+    if (!isDragAction) {
+      setCurrentHitboxModal(id);
+    }
+  };
 
   const startDrag = (e: React.MouseEvent, target: DragTarget) => {
     e.preventDefault();
@@ -272,6 +304,32 @@ function App() {
   };
 
   useEffect(() => {
+    const handler = () => {
+      handleOpen();
+    };
+
+    window.electronAPI.onAddImage(handler);
+
+    return () => {
+      // You'll need to add this to preload.js
+      window.electronAPI.offAddImage?.(handler);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      handleClose();
+    };
+
+    window.electronAPI.onRemoveImage(handler);
+
+    return () => {
+      // You'll need to add this to preload.js
+      window.electronAPI.offRemoveImage?.(handler);
+    };
+  }, []);
+
+  useEffect(() => {
     if (isDragging !== "modal") return;
 
     const move = (e: MouseEvent) => {
@@ -307,6 +365,7 @@ function App() {
     const editorRect = editorContainer.getBoundingClientRect();
 
     const move = (e: MouseEvent) => {
+      handleHitboxMouseMove(e);
       const mouseXRelativeToEditor = e.clientX - editorRect.left;
       const mouseYRelativeToEditor = e.clientY - editorRect.top;
 
@@ -314,16 +373,9 @@ function App() {
       const Y = mouseYRelativeToEditor - hitboxOffset.y;
 
       setHitboxes((prevHitboxes) =>
-        prevHitboxes.map((h) => {
-          if (h.id === draggingHitboxId) {
-            return {
-              ...h,
-              origin_x: X,
-              origin_y: Y,
-            };
-          }
-          return h;
-        })
+        prevHitboxes.map((h) =>
+          h.id === draggingHitboxId ? { ...h, origin_x: X, origin_y: Y } : h
+        )
       );
     };
 
@@ -661,7 +713,7 @@ function App() {
           min={SCALE_CONFIG.min}
           max={SCALE_CONFIG.max}
           className="input-styles"
-          onChange={(_e, v) => setScaleSize(v)}
+          onChange={(_e, v) => setScaleSize(v as number)}
           sx={{
             color: "#305e49",
             height: 6,
@@ -727,7 +779,7 @@ function App() {
           marks
           min={BGSIZE_CONFIG.min}
           max={BGSIZE_CONFIG.max}
-          onChange={(_e, v) => setBgSize(v)}
+          onChange={(_e, v) => setBgSize(v as number)}
           sx={{
             color: "#305e49",
             height: 6,
@@ -919,11 +971,8 @@ function App() {
                   ? "grabbing"
                   : "grab",
             }}
-            onMouseDown={(e) => {
-              startDrag(e, "hitbox");
-            }}
-            onMouseUp={stopDrag}
-            onClick={() => setCurrentHitboxModal(id)}
+            onMouseDown={(e) => handleHitboxMouseDown(e, id)}
+            onMouseUp={() => handleHitboxMouseUp(id)}
           >
             Hitbox: {id}
           </div>
